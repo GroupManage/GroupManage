@@ -1,0 +1,27 @@
+# depslib dependency file v1.0
+1474045950 source:g:\personnel\c++\gestion des groupes\exeptions.cpp
+	"Exeptions.h"
+
+1474045980 g:\personnel\c++\gestion des groupes\exeptions.h
+	<string>
+	<windows.h>
+
+1474046296 source:g:\personnel\c++\gestion des groupes\dlltraitement.cpp
+	<windows.h>
+	<vector>
+	<string>
+	<math.h>
+	<time.h>
+	<algorithm>
+	<cstdio>
+	"typesData.h"
+	"Exeptions.h"
+	"resource.h"
+	"dllTraitement.h"
+
+1474046018 g:\personnel\c++\gestion des groupes\typesdata.h
+
+1474045918 g:\personnel\c++\gestion des groupes\resource.h
+
+1474045976 g:\personnel\c++\gestion des groupes\dlltraitement.h
+
