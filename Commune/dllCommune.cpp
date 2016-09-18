@@ -275,7 +275,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 	string lineStatu="Nombre d'enfants en tout: ";
 	lineStatu+=nbEnfants;
 	SendMessage(hstatu,SB_SETTEXT,MAKELONG(0,0),(LPARAM)const_cast<char*>(lineStatu.c_str()));
-	lineStatu="Nombre d'enfants présents le ";
+	lineStatu="Nombre d'enfants prÃ©sents le ";
 	string nmJour[4]={"lundi: ","mardi: ","jeudi: ","vendredi: "};
 	nbEnfantJour=0;
 	for(int jour=0;jour<4;jour++)
@@ -287,7 +287,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
   			    nbEnfantJour++;
   			}
 	    }
-	    lineStatu="Nombre d'enfants présents le ";
+	    lineStatu="Nombre d'enfants prÃ©sents le ";
 	    lineStatu+=nmJour[jour];
 	    nbEnfants=to_string(nbEnfantJour);
 	    lineStatu+=nbEnfants;
@@ -331,7 +331,7 @@ void DLLEXPORT RemplirListeClasse(vector<enfantActi> const &enfants, vector<Info
     size_t foundNew=0;
     bool classeNonPresente=true;
     string str;
-    //recherche dans les activités
+    //recherche dans les activitÃ©s
     for(int i=0;i<activite.size();i++)
     {
 	    found=0;
@@ -362,7 +362,7 @@ void DLLEXPORT RemplirListeClasse(vector<enfantActi> const &enfants, vector<Info
 			foundNew=activite[i].classe.find('\t',found);
 		}
 	}
-	//recherche dans les élèves
+	//recherche dans les Ã©lÃ¨ves
 	classeNonPresente=true;
 	for(int jour=0;jour<4;jour++)
 	{
@@ -401,8 +401,8 @@ bool DLLEXPORT CreateToolTip(HWND hwnd, HWND &hwndToolTips, HINSTANCE const &hin
     toolInfo.hwnd = hwnd;
     toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS | TTF_TRACK;
     toolInfo.uId = (UINT_PTR)hwnd;
-    toolInfo.lpszText = (LPSTR)"Enregistrez cette feuille si vous êtes sur qu'elle convient.\n\
-Enregistrez-là grâce à \"Enregistrer sous...\".";
+    toolInfo.lpszText = (LPSTR)"Enregistrez cette feuille si vous Ãªtes sur qu'elle convient.\n\
+Enregistrez-lÃ  grÃ¢ce Ã  \"Enregistrer sous...\".";
     SendMessage(hwndToolTips, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
 
     SendMessage(hwndToolTips,TTM_SETTITLEA,1,(LPARAM)"Enregistrer la feuille");
@@ -442,7 +442,7 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, vector<enfantActi> const &enf
 	string lineStatu="Nombre d'enfants en tout: ";
 	lineStatu+=nbEnfants;
 	SendMessage(hstatu,SB_SETTEXT,MAKELONG(0,0),(LPARAM)lineStatu.c_str());
-	lineStatu="Nombre d'enfants présents le ";
+	lineStatu="Nombre d'enfants prÃ©sents le ";
 	string nmJour[4]={"lundi: ","mardi: ","jeudi: ","vendredi: "};
 	nbEnfantJour=0;
 	for(int jour=0;jour<4;jour++)
@@ -454,7 +454,7 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, vector<enfantActi> const &enf
   			    nbEnfantJour++;
   			}
 	    }
-	    lineStatu="Nombre d'enfants présents le ";
+	    lineStatu="Nombre d'enfants prÃ©sents le ";
 	    lineStatu+=nmJour[jour];
 	    nbEnfants=to_string(nbEnfantJour);
 	    lineStatu+=nbEnfants;
@@ -476,11 +476,11 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, HWND const &hListboxNom)
 
     string a;
     a=to_string(count);
-    string sSel="Sélectionnés: "+a;
+    string sSel="SÃ©lectionnÃ©s: "+a;
     a=to_string(myList[0]+1);
     string sRange="De "+a;
     a=to_string(myList[myList.size()-1]+1);
-    sRange+=" à "+a;
+    sRange+=" Ã  "+a;
 
     delete[] list;
 
