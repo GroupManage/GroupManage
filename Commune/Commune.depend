@@ -1,12 +1,12 @@
 # depslib dependency file v1.0
-1474045950 source:g:\personnel\c++\gestion des groupes\exeptions.cpp
+1474045950 source:exeptions.cpp
 	"Exeptions.h"
 
-1474045980 g:\personnel\c++\gestion des groupes\exeptions.h
+1474045980 exeptions.h
 	<string>
 	<windows.h>
 
-1474046106 source:g:\personnel\c++\gestion des groupes\dllcommune.cpp
+1474046106 dllcommune.cpp
 	<windows.h>
 	<string>
 	"Shlobj.h"
@@ -19,9 +19,9 @@
 	"resource.h"
 	"dllCommune.h"
 
-1474046018 g:\personnel\c++\gestion des groupes\typesdata.h
+1474046018 typesdata.h
 
-1474045918 g:\personnel\c++\gestion des groupes\resource.h
+1474045918 resource.h
 
-1474046996 g:\personnel\c++\gestion des groupes\dllcommune.h
+1474046996 dllcommune.h
 
