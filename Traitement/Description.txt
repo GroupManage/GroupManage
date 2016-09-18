@@ -1,0 +1,1 @@
+Traitement.dll gère le traitement (i.e l'affectation) des individus.
