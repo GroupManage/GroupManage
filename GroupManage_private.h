@@ -37,7 +37,7 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define FILE_VERSION	"3.4"
 #define FILE_DESCRIPTION	"Classeur pour TAP"
 #define INTERNAL_NAME	"GroupManage"
-#define LEGAL_COPYRIGHT	""
+#define LEGAL_COPYRIGHT	"Copyright (C) 2016 Simon Vareille"
 #define LEGAL_TRADEMARKS	""
 #define ORIGINAL_FILENAME	"GroupManage"
 #define PRODUCT_NAME	"GroupManage"
