@@ -1,0 +1,1 @@
+Commune.dll contient les fonctions communes à tout le programme.
