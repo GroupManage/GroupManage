@@ -1,0 +1,329 @@
+/*
+GroupManage was built in order to simplify the creation of groups. Please refer to the documentation for more details.
+
+Copyright (C) 2016  Simon Vareille
+
+This file is part of GroupManage.
+
+GroupManage is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+GroupManage is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GroupManage. If not, see <http://www.gnu.org/licenses/>.
+
+For any questions or suggestions, please contact me at <groupmanage.assistance@gmail.com>
+*/
+
+#include <windows.h>
+#include "resource.h"
+//500 ICON MOVEABLE PURE LOADONCALL DISCARDABLE "C:/Documents and Settings/All Users/Documents/Python/icone3.ico"
+IDI_ICON ICON "Icones/icone_principale.ico"
+
+IDI_ICONGRMA ICON "Icones/icone GRMA.ico"//C:\Dev-Cpp\DevCpp.exe,5 //"G:\Personnel\C++\gestion des groupes\release\GroupManage.exe",504 //%Windir%\System32\rundll32.exe USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
+IDI_ICONEAC  ICON "Icones/icone EAC.ico"
+
+ID_MENU MENU
+BEGIN
+
+    POPUP "Fichier"
+
+    BEGIN
+        MENUITEM "&Nouveau\tCtrl+N", IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Ouvrir\tCtrl+O", IDM_OPEN
+        MENUITEM "Ouvrir une liste d'activités\tCtrl+Shift+O", IDM_OPENACTI
+        MENUITEM SEPARATOR
+        MENUITEM "Enregistrer\tCtrl+S",IDM_SAVE
+        MENUITEM "Enregistrer sous...",IDM_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Enregistrer sous (lisible par tableur)...",IDM_SAVEASTABL
+        MENUITEM SEPARATOR
+        MENUITEM "Enregistrer la liste d'activités\tCtrl+Shift+S",IDM_SAVEACTI
+        MENUITEM "Enregistrer la liste d'activités sous...",IDM_SAVEACTIAS
+        MENUITEM SEPARATOR
+        MENUITEM "Quitter\tAlt+F4", IDM_QUIT
+
+    END
+    POPUP "Edition"
+    BEGIN
+        MENUITEM "Coller\tCtrl+V",IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Rechercher...\tCtrl+F",IDM_FINDNAME
+	    MENUITEM "Rechercher Suivant\tF3",ID_BUTTONFINDNEXT
+	    MENUITEM "Aller à la ligne\tCtrl+G",IDM_GOLINE
+    END
+    POPUP "Réviser"
+    BEGIN
+        MENUITEM "Vérifier le remplissage\tCtrl+R",IDM_VERIF_REMPLI
+        MENUITEM "Dénombrer le nombre de demandes\tCtrl+P",IDM_COUNT_APPLICATION
+        MENUITEM "Vérifier les activités",IDM_VERIF_ACTI
+    END
+    POPUP "?"
+    BEGIN
+        MENUITEM "Rubrique d'aide\tF1",IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "A-propos",IDM_ABOUT
+    END
+END
+
+LesAccel ACCELERATORS
+BEGIN
+    "O", IDM_OPEN, CONTROL, VIRTKEY
+    "O", IDM_OPENACTI, CONTROL,SHIFT, VIRTKEY
+    "N", IDM_NEW, CONTROL, VIRTKEY
+    "S", IDM_SAVE, CONTROL, VIRTKEY
+    "S", IDM_SAVEACTI, CONTROL, SHIFT, VIRTKEY
+    "F", IDM_FINDNAME, CONTROL, VIRTKEY
+    VK_F3, ID_BUTTONFINDNEXT, VIRTKEY
+    "G", IDM_GOLINE, CONTROL, VIRTKEY
+    "R",IDM_VERIF_REMPLI, CONTROL, VIRTKEY
+    "P",IDM_COUNT_APPLICATION, CONTROL, VIRTKEY
+    VK_TAB,ID_CHANGEITEMTABPLUS,CONTROL,VIRTKEY
+    VK_TAB,ID_CHANGEITEMTABMOINS,CONTROL,SHIFT,VIRTKEY
+    //"V",ID_PASTE,CONTROL, VIRTKEY
+    VK_ADD,ID_BUTTONADD,CONTROL,VIRTKEY
+END
+
+MENUDIALOG MENU
+BEGIN
+  POPUP "Fichier"
+    BEGIN
+       MENUITEM "Enregistrer sous (brut)...",IDM_SAVEAS
+       MENUITEM "Enregistrer sous (formaté)...",IDM_SAVEASFORMAT
+    END
+  POPUP "Révision"//Statistiques
+    BEGIN
+       MENUITEM "Elèves moins bien attribués",IDM_BADAFFECT
+       //MENUITEM "Elèves moins bien attribués",IDM_BADAFFECT
+    END
+END
+
+DIALOGSORTIE DIALOGEX
+
+    50, 10, 625, 375
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+          EXSTYLE WS_EX_TOPMOST
+
+                                               CAPTION "Résultat du traitement"
+
+BEGIN
+END
+
+DIALOGBADAFFECT DIALOGEX
+
+    50, 30, 500, 300
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_CHILD
+
+                                               CAPTION "Elèves les moins bien attribués/Elèves les mieux attribués"
+
+BEGIN
+END
+
+DIALOGVERIFREMPLI DIALOGEX
+
+    50, 30, 500, 300
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+          //EXSTYLE WS_EX_TOPMOST
+
+                                               CAPTION "Vérification des voeux des élèves"
+
+BEGIN
+
+    //LTEXT "Ce programme a été conçut et élaboré par Simon Vareille\npour un usage strictement non-règlementé.", -1, 10, 10, 200, 100, WS_GROUP
+
+    //DEFPUSHBUTTON "Terminer maintenant", DB_ENDNOW, 36, 100, 80, 12, WS_GROUP
+
+    //PUSHBUTTON "Annuler", IDCANCEL, 120, 100, 42, 12
+
+END
+
+DIALOGFINDNAME DIALOGEX
+
+    200, 200, 150, 75
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_CHILD
+
+                                               CAPTION "Rechercher..."
+
+BEGIN
+
+    LTEXT "Texte à rechercher: ", -1, 43, 5, 64, 12, WS_GROUP
+	EDITTEXT IDE_EDITFINDNAME, 35, 20, 80, 12,ES_CENTER
+    DEFPUSHBUTTON "Rechercher", IDOK, 35, 40, 80, 12, WS_GROUP
+
+    PUSHBUTTON "Annuler", IDCANCEL, 54, 60, 42, 12
+
+END
+
+DIALOGGOLINE DIALOGEX
+
+    200, 200, 150, 75
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_CHILD
+
+                                               CAPTION "Aller à la ligne..."
+
+BEGIN
+
+    LTEXT "Aller à la ligne: ", -1, 43, 5, 64, 12, WS_GROUP
+	EDITTEXT IDE_EDITFINDNAME, 35, 20, 80, 12,ES_CENTER | ES_NUMBER
+    DEFPUSHBUTTON "Go", IDOK, 35, 40, 80, 12, WS_GROUP | BS_CENTER
+
+    PUSHBUTTON "Annuler", IDCANCEL, 54, 60, 42, 12
+
+END
+
+DIALOGVERIFPLACES DIALOGEX
+
+    200, 200, 250, 100
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_CHILD
+
+                                               CAPTION "Vérifier le nombre de places"
+
+BEGIN
+    /*GROUPBOX "Conditions",0,10,10,230,80
+    AUTORADIOBUTTON "Prendre en compte touts les élèves inscrits",IDC_RADIO1,20,20,200,16
+    AUTORADIOBUTTON "Prendre en compte seulement les élèves présents",IDC_RADIO2,20,35,200,16
+    //LTEXT "", -1, 20, 20, 100, 20, WS_GROUP
+	//EDITTEXT IDE_EDITFINDNAME, 30, 20, 80, 12,ES_CENTER | ES_NUMBER*/
+
+	LTEXT "Ces fonctions ne sont malheureusement pas encore disponibles !", -1, 20, 28, 200, 20, WS_GROUP
+
+    DEFPUSHBUTTON "OK", IDOK, 100, 55, 50, 12, WS_GROUP | BS_CENTER
+    //PUSHBUTTON "Annuler", ID_, 54, 60, 42, 12
+    PUSHBUTTON "Annuler", IDCANCEL, 100, 75, 50, 12
+
+END
+
+DIALOGCOUNTAPPLICATION DIALOGEX
+
+    200, 200, 250, 100
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_CHILD
+
+                                               CAPTION "Dénombrer le nombre de demandes"
+
+BEGIN
+    LTEXT "En cours de création, disponible prochainement!", -1, 20, 28, 200, 20, WS_GROUP
+    DEFPUSHBUTTON "Retour", IDOK, 100, 55, 50, 12, WS_GROUP | BS_CENTER
+END
+
+DIALOGCOLLER DIALOGEX
+
+    200, 200, 250, 100
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_CHILD
+
+                                               CAPTION "Coller"
+
+BEGIN
+    GROUPBOX "Conditions",0,10,10,230,80
+    AUTORADIOBUTTON "Remplacer le tableau présent",IDC_RADIO1,20,20,200,16
+    AUTORADIOBUTTON "Ajouter au tableau présent",IDC_RADIO2,20,35,200,16
+    //LTEXT "", -1, 20, 20, 100, 20, WS_GROUP
+	//EDITTEXT IDE_EDITFINDNAME, 30, 20, 80, 12,ES_CENTER | ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 100, 55, 50, 12, WS_GROUP | BS_CENTER
+    //PUSHBUTTON "Annuler", ID_, 54, 60, 42, 12
+    PUSHBUTTON "Annuler", IDCANCEL, 100, 75, 50, 12
+
+END
+
+DIALOGSELECTCLASSE DIALOGEX
+
+    150, 100, 250, 120
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+
+                                               CAPTION "Sélectionnez une ou plusieurs classe correspondant à l'activité"
+
+BEGIN
+    GROUPBOX "Classes",0,10,10,230,100
+    AUTOCHECKBOX "Toutes les classes",IDC_RADIO1,75,19,100,12,BS_AUTOCHECKBOX
+    DEFPUSHBUTTON "OK", IDOK, 50, 95, 50, 12, WS_GROUP | BS_CENTER
+    PUSHBUTTON "Annuler", IDCANCEL, 150, 95, 50, 12
+
+END
+
+DIALOGTRAITEMENTENCOURS DIALOGEX
+
+    150, 100, 300, 140
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION
+
+                                               CAPTION "Traitement en cours..."
+
+BEGIN
+    LTEXT "Traitement en cours. Pour l'arrêter, veuillez appuyer sur Arrêter.", IDT_MAINTXT, 10, 5, 400, 12, WS_GROUP
+    LTEXT "Le traitement ne sarrêtera pas tant que vous n'aurez pas appuyé sur le boutton Arrêter.\nPlus vous laisserez le programme tourner, plus le résultat sera fiable.",-1,10,20, 400, 24, WS_GROUP
+    LTEXT "Fiabilité estimée: inférieur à 10%",IDT_FIABILITE, 90, 45, 150, 12
+    LTEXT "Voeu attribué en moyenne: 0",IDT_MOYENNEVOEUX, 95, 60, 150, 12
+	CONTROL "", IDE_PB1, PROGRESS_CLASS, PBS_MARQUEE, 50, 75, 190, 12
+	LTEXT "Temps écoulé : 0:0:0",IDT_TEMPS, 110, 90, 100, 12
+	LTEXT "Nombre de cycles : ",0,108,105,100,12
+	LTEXT "0",IDT_CYCLE,172,105,50,12
+	DEFPUSHBUTTON "Arrêter", IDOK, 120, 120, 50, 12, WS_GROUP | BS_CENTER
+    //PUSHBUTTON "Annuler", IDCANCEL, 150, 95, 50, 12
+
+END
+
+DIALOGVERIFACTI DIALOGEX
+
+    50, 30, 376, 300
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+          //EXSTYLE WS_EX_TOPMOST
+
+                                               CAPTION "Vérification des activités"
+
+BEGIN
+    //gdgs
+END
+
+DIALOGMODIFACTI DIALOGEX
+
+    50, 30, 200, 120
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+
+                                               CAPTION "Modifier une activité"
+
+BEGIN
+    LTEXT "Nom de l'activité: ",0,10,12,100,12
+    EDITTEXT IDE_EDITMODIFNAME,75,10, 80, 12,ES_CENTER
+
+    LTEXT "Nombre de places: ",0,10,32,100,12
+    CONTROL "",IDE_UPDOWN,UPDOWN_CLASS,WS_VISIBLE | WS_CHILD| UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS,95,30,20,12
+    EDITTEXT IDE_EDITMODIFPLACES,75,30,20,12,ES_CENTER | ES_NUMBER
+
+    LTEXT "Jour de l'activité: ",0,10,52,100,12
+    COMBOBOX IDE_COMBOBOX,75,50,80,12,CBS_DROPDOWNLIST
+
+    PUSHBUTTON "Sélectionner les classes correspondantes", ID_BUTTONCLASSES, 25, 80, 150, 12
+    PUSHBUTTON "OK", IDOK, 50, 105, 50, 12, WS_GROUP | BS_CENTER
+    PUSHBUTTON "Annuler", IDCANCEL, 100, 105, 50, 12
+END
+
+
+DIALOGABOUT DIALOGEX
+
+    100, 50, 300, 300
+
+        STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU //| WS_SIZEBOX
+
+                            CAPTION "À propos..."
+
+BEGIN
+    CONTROL "", ID_ETCHEDFRAME, "STATIC", SS_ETCHEDFRAME , 10, 2, 280, 138
+
+END

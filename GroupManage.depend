@@ -1,0 +1,64 @@
+# depslib dependency file v1.0
+1474045950 source:g:\personnel\c++\gestion des groupes\exeptions.cpp
+	"Exeptions.h"
+
+1474045980 g:\personnel\c++\gestion des groupes\exeptions.h
+	<string>
+	<windows.h>
+
+1474196228 source:g:\personnel\c++\gestion des groupes\groupmanage.cpp
+	<windows.h>
+	"resource.h"
+	<fstream>
+	"Shlobj.h"
+	<algorithm>
+	<Windowsx.h>
+	<fcntl.h>
+	<sstream>
+	<string>
+	<vector>
+	"typesData.h"
+	"Exeptions.h"
+	"dllTraitement.h"
+	"dllCommune.h"
+	"dllIO.h"
+
+1474045918 g:\personnel\c++\gestion des groupes\resource.h
+
+1474047630 g:\personnel\c++\gestion des groupes\typesdata.h
+
+1474045976 g:\personnel\c++\gestion des groupes\dlltraitement.h
+
+1474047072 g:\personnel\c++\gestion des groupes\dllcommune.h
+
+1474045968 g:\personnel\c++\gestion des groupes\dllio.h
+
+1474045924 source:g:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1474046854 source:g:\personnel\c++\gestion des groupes\groupmanage_private.rc
+	<windows.h>
+	"resource.rc"
+
+1474045924 g:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1473092662 source:g:\personnel\c++\gestion des groupes\groupmanage sans commentaires v3.4.cpp
+	<windows.h>
+	"resource.h"
+	<fstream>
+	"Shlobj.h"
+	<algorithm>
+	<Windowsx.h>
+	<fcntl.h>
+	<sstream>
+	<string>
+	<vector>
+	"typesData.h"
+	"Exeptions.h"
+	"dllTraitement.h"
+	"dllCommune.h"
+	"dllIO.h"
+

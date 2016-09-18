@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="GroupManage" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="default">
+				<Option output="release/GroupManage" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="release" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+			</Target>
+		</Build>
+		<Linker>
+			<Add option="release/libTraitement.a" />
+			<Add option="release/libCommune.a" />
+			<Add option="release/libIO.a" />
+		</Linker>
+		<Unit filename="Exeptions.cpp" />
+		<Unit filename="Exeptions.h" />
+		<Unit filename="GroupManage_private.h" />
+		<Unit filename="GroupManage_private.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="dllCommune.h" />
+		<Unit filename="dllIO.h" />
+		<Unit filename="dllTraitement.h" />
+		<Unit filename="groupmanage.cpp" />
+		<Unit filename="resource.h" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="CPP" />
+		</Unit>
+		<Unit filename="typesData.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
