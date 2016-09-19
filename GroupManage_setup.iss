@@ -35,7 +35,7 @@ Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-;Name: "commonprogramsicon"; Description: "Créer une icône dans le menu Demarrer"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+;Name: "commonprogramsicon"; Description: "CrÃ©er une icÃ´ne dans le menu Demarrer"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 Source: "release\GroupManage.exe"; DestDir: "{app}"; Flags: ignoreversion
