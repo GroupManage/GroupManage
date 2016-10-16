@@ -20,9 +20,10 @@ DefaultDirName={pf}\GroupManage 3
 ;DisableProgramGroupPage=yes
 AllowNoIcons=yes
 OutputDir=.
-OutputBaseFilename=GroupManage_setup-3.4
+OutputBaseFilename=GroupManage_no_privileges_setup-3.4
 Compression=lzma
 SolidCompression=yes
+PrivilegesRequired=lowest
 #ifdef DEBUGING
 PrivilegesRequired=lowest
 #endif
@@ -56,33 +57,6 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 
 ;Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: commonprogramsicon;
 
-[Registry]
-Root: HKCR; Subkey: ".grma"; ValueType: string; ValueData: "GroupManage.grma";
-Root: HKCR; Subkey: "GroupManage.grma\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},1";
-Root: HKCR; Subkey: "GroupManage.grma\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1";
-Root: HKCR; Subkey: "GroupManage.grma\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1""";
-
-Root: HKCR; Subkey: ".grma2"; ValueType: string; ValueData: "GroupManage.grma2";
-Root: HKCR; Subkey: "GroupManage.grma2\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},1";
-Root: HKCR; Subkey: "GroupManage.grma2\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1";
-Root: HKCR; Subkey: "GroupManage.grma2\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1""";
-
-Root: HKCR; Subkey: ".eac"; ValueType: string; ValueData: "GroupManage.eac";
-Root: HKCR; Subkey: "GroupManage.eac\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},2";
-Root: HKCR; Subkey: "GroupManage.eac\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1";
-
-#ifndef DEBUGING
-
-Root: HKCR; Subkey: ".grma"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GroupManage.grma"; Flags: uninsdeletekey
-
-Root: HKCR; Subkey: ".grma2"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GroupManage.grma2"; Flags: uninsdeletekey
-
-Root: HKCR; Subkey: ".eac"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GroupManage.eac"; Flags: uninsdeletekey
-
-#endif
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent 
