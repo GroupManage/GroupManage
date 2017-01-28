@@ -3,15 +3,35 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="Commune" />
+		<Option platforms="Windows;" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="default">
+				<Option platforms="Windows;" />
 				<Option output="release/Commune" prefix_auto="1" extension_auto="1" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option host_application="release/GroupManage.exe" />
+				<Option run_host_application_in_terminal="0" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
+			</Target>
+			<Target title="release 64">
+				<Option platforms="Windows;" />
+				<Option output="release64/Commune" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="release64" />
+				<Option object_output=".objs64" />
+				<Option type="3" />
+				<Option compiler="gnu_gcc_compiler_64_bits" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-m64" />
+				</Compiler>
+				<Linker>
+					<Add option="-m64" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
