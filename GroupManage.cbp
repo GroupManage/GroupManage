@@ -3,16 +3,38 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="GroupManage" />
+		<Option platforms="Windows;" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="default">
+				<Option platforms="Windows;" />
 				<Option output="release/GroupManage" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 			</Target>
+			<Target title="release 64 bits">
+				<Option platforms="Windows;" />
+				<Option output="release64/GroupManage64" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="release64" />
+				<Option object_output=".objs64" />
+				<Option type="0" />
+				<Option compiler="gnu_gcc_compiler_64_bits" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-m64" />
+					<Add option="-fpermissive" />
+					<Add option="-DWIN_64" />
+				</Compiler>
+				<Linker>
+					<Add option="-m64" />
+				</Linker>
+			</Target>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All-Release" targets="default;release 64 bits;" />
+		</VirtualTargets>
 		<Linker>
 			<Add option="release/libTraitement.a" />
 			<Add option="release/libCommune.a" />
@@ -20,9 +42,12 @@
 		</Linker>
 		<Unit filename="Exeptions.cpp" />
 		<Unit filename="Exeptions.h" />
-		<Unit filename="GroupManage_private.h" />
+		<Unit filename="GroupManage_private.h">
+			<Option target="default" />
+		</Unit>
 		<Unit filename="GroupManage_private.rc">
 			<Option compilerVar="WINDRES" />
+			<Option target="default" />
 		</Unit>
 		<Unit filename="dllCommune.h" />
 		<Unit filename="dllIO.h" />
@@ -33,11 +58,22 @@
 			<Option compilerVar="CPP" />
 		</Unit>
 		<Unit filename="typesData.h" />
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
-			<debugger />
+			<debugger>
+				<remote_debugging>
+					<options conn_type="0" serial_baud="115200" extended_remote="1" />
+				</remote_debugging>
+			</debugger>
 			<lib_finder disable_auto="1" />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" use_define="0" update_manifest="255" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="ChangesLog.txt" />
+				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+			</AutoVersioning>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
