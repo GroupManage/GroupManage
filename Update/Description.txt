@@ -1,0 +1,1 @@
+Update.exe est le logiciel de gestion des mises à jour de GroupManage.
