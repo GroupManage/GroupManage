@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1480864868 source:g:\personnel\c++\gestion des groupes\groupmanage.github.io\updateupdate.cpp
+	<windows.h>
+	<iostream>
+	<sstream>
+	<cstdio>
+	<string>
+	<vector>
+
