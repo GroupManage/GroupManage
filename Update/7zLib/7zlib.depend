@@ -1,0 +1,181 @@
+# depslib dependency file v1.0
+1480794013 source:c:\lzma\c\util\7z\7zlib\main.cpp
+	<cstdlib>
+	<iostream>
+	<string>
+	"../Precomp.h"
+	<stdio.h>
+	<string.h>
+	<vector>
+	<algorithm>
+	"../../../7z.h"
+	"../../../7zAlloc.h"
+	"../../../7zBuf.h"
+	"../../../7zCrc.h"
+	"../../../7zFile.h"
+	"../../../7zVersion.h"
+	<direct.h>
+	<sys/stat.h>
+	<errno.h>
+
+1447062068 source:c:\lzma\c\7zalloc.c
+	"Precomp.h"
+	"7zAlloc.h"
+	<windows.h>
+	<stdio.h>
+
+1384236319 c:\lzma\c\precomp.h
+	"Compiler.h"
+
+1438512743 c:\lzma\c\compiler.h
+
+1427299678 c:\lzma\c\7zalloc.h
+	<stdlib.h>
+
+1479637305 source:c:\lzma\c\7zarcin.c
+	"Precomp.h"
+	<string.h>
+	"7z.h"
+	"7zBuf.h"
+	"7zCrc.h"
+	"CpuArch.h"
+
+1479637245 c:\lzma\c\7z.h
+	"7zTypes.h"
+
+1384235681 c:\lzma\c\7ztypes.h
+	<stddef.h>
+
+1358499600 c:\lzma\c\7zbuf.h
+	"7zTypes.h"
+
+1358499600 c:\lzma\c\7zcrc.h
+	"7zTypes.h"
+
+1465447171 c:\lzma\c\cpuarch.h
+	"7zTypes.h"
+	<stdlib.h>
+
+1358962967 source:c:\lzma\c\7zbuf.c
+	"Precomp.h"
+	"7zBuf.h"
+
+1408690924 source:c:\lzma\c\7zbuf2.c
+	"Precomp.h"
+	<string.h>
+	"7zBuf.h"
+
+1425979874 source:c:\lzma\c\7zcrc.c
+	"Precomp.h"
+	"7zCrc.h"
+	"CpuArch.h"
+
+1425196122 source:c:\lzma\c\7zcrcopt.c
+	"Precomp.h"
+	"CpuArch.h"
+
+1447844994 source:c:\lzma\c\7zdec.c
+	"Precomp.h"
+	<string.h>
+	"7z.h"
+	"7zCrc.h"
+	"Bcj2.h"
+	"Bra.h"
+	"CpuArch.h"
+	"Delta.h"
+	"LzmaDec.h"
+	"Lzma2Dec.h"
+	"Ppmd7.h"
+
+1415641556 c:\lzma\c\bcj2.h
+	"7zTypes.h"
+
+1358499600 c:\lzma\c\bra.h
+	"7zTypes.h"
+
+1358499600 c:\lzma\c\delta.h
+	"7zTypes.h"
+
+1358499600 c:\lzma\c\lzmadec.h
+	"7zTypes.h"
+
+1431503965 c:\lzma\c\lzma2dec.h
+	"LzmaDec.h"
+
+1463813355 c:\lzma\c\ppmd7.h
+	"Ppmd.h"
+
+1463384447 c:\lzma\c\ppmd.h
+	"CpuArch.h"
+
+1358962971 source:c:\lzma\c\7zfile.c
+	"Precomp.h"
+	"7zFile.h"
+	<errno.h>
+
+1358499600 c:\lzma\c\7zfile.h
+	<windows.h>
+	<stdio.h>
+	"7zTypes.h"
+
+1384235422 source:c:\lzma\c\7zstream.c
+	"Precomp.h"
+	<string.h>
+	"7zTypes.h"
+
+1438400014 source:c:\lzma\c\bcj2.c
+	"Precomp.h"
+	"Bcj2.h"
+	"CpuArch.h"
+
+1358963018 source:c:\lzma\c\bra.c
+	"Precomp.h"
+	"Bra.h"
+
+1384234573 source:c:\lzma\c\bra86.c
+	"Precomp.h"
+	"Bra.h"
+
+1384237089 source:c:\lzma\c\braia64.c
+	"Precomp.h"
+	"Bra.h"
+
+1456386128 source:c:\lzma\c\cpuarch.c
+	"Precomp.h"
+	"CpuArch.h"
+	<intrin.h>
+	<windows.h>
+
+1358963303 source:c:\lzma\c\delta.c
+	"Precomp.h"
+	"Delta.h"
+
+1447061972 source:c:\lzma\c\lzma2dec.c
+	"Precomp.h"
+	<stdio.h>
+	<string.h>
+	"Lzma2Dec.h"
+
+1463382691 source:c:\lzma\c\lzmadec.c
+	"Precomp.h"
+	"LzmaDec.h"
+	<string.h>
+
+1463813355 source:c:\lzma\c\ppmd7.c
+	"Precomp.h"
+	<string.h>
+	"Ppmd7.h"
+
+1358963034 source:c:\lzma\c\ppmd7dec.c
+	"Precomp.h"
+	"Ppmd7.h"
+
+1358962950 source:c:\lzma\c\util\7z\precomp.c
+	"Precomp.h"
+
+1402894704 c:\lzma\c\util\7z\precomp.h
+	"../../Compiler.h"
+	"../../7zTypes.h"
+
+1475579440 c:\lzma\c\7zversion.h
+
