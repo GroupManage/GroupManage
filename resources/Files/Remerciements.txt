@@ -1,0 +1,6 @@
+----------------Remerciements----------------
+
+Je remercie:
+
+- Jordan Russel pour son merveilleux outil "Inno Setup" qui a permi de créer le logiciel d'installation.
+- Touts les membres du forum C++ de Developpez.com pour leurs aides éclairées.
