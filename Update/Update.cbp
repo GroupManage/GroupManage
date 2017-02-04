@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Update" />
+		<Option pch_mode="2" />
+		<Option default_target="Release" />
+		<Option compiler="gcc" />
+		<Build>
+			<Script file="lib_finder.script" />
+			<Target title="Debug">
+				<Option output="bin/Debug/Update.exe" prefix_auto="1" extension_auto="0" />
+				<Option working_dir="bin/Debug/" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="-searchButNotDownload_Notify " />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add library="boost_filesystem-mgw44-mt-1_62" />
+					<Add library="boost_system-mgw44-mt-1_62" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Update" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="bin/Release/" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="-update" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="boost_filesystem-mgw44-mt-1_62" />
+					<Add library="boost_system-mgw44-mt-1_62" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-DASIO_STANDALONE" />
+			<Add option="-D_WIN32_WINNT=0x0501" />
+		</Compiler>
+		<Linker>
+			<Add library="libssl" />
+			<Add library="libcrypto" />
+			<Add library="Ws2_32" />
+			<Add library="gdi32" />
+			<Add library="7zlib" />
+		</Linker>
+		<Unit filename="EmpreinteSHA256.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="EmpreinteSHA256.h" />
+		<Unit filename="HTTPSclient.cpp" />
+		<Unit filename="HTTPSclient.h" />
+		<Unit filename="Mise a jour de Update.nsd" />
+		<Unit filename="Update_private.h" />
+		<Unit filename="Update_private.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="bin/Release/Update.exe.Manifest" />
+		<Unit filename="lzmasaver.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="resource.h" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="update.cpp" />
+		<Unit filename="version.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger>
+				<remote_debugging>
+					<options conn_type="0" serial_baud="115200" ip_address="127.0.0.1" />
+				</remote_debugging>
+			</debugger>
+			<lib_finder disable_auto="1" />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" use_define="0" update_manifest="1" do_auto_increment="0" ask_to_increment="1" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="ChangesLog.txt" />
+				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+			</AutoVersioning>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
