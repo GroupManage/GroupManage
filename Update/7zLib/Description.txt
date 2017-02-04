@@ -1,0 +1,2 @@
+7zLib est une bibliothèque statique permettant de décompresser des fichiers .7z.
+Elle a été conçu à partir des exemples fournis par Igor Pavlov
