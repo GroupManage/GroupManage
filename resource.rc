@@ -71,7 +71,7 @@ BEGIN
     POPUP "Réviser"
     BEGIN
         MENUITEM "Vérifier le remplissage\tCtrl+R",IDM_VERIF_REMPLI
-        MENUITEM "Dénombrer le nombre de demandes\tCtrl+P",IDM_COUNT_APPLICATION
+        //MENUITEM "Dénombrer le nombre de demandes\tCtrl+P",IDM_COUNT_APPLICATION
         MENUITEM "Vérifier les activités",IDM_VERIF_ACTI
     END
     POPUP "Propriétés"
