@@ -1,12 +1,53 @@
 # depslib dependency file v1.0
-1474045950 source:exeptions.cpp
+1484677546 source:g:\personnel\c++\gestion des groupes\exeptions.cpp
 	"Exeptions.h"
 
-1474045980 exeptions.h
+1484677574 g:\personnel\c++\gestion des groupes\exeptions.h
 	<string>
 	<windows.h>
 
-1474196228 source:groupmanage.cpp
+1485541310 source:g:\personnel\c++\gestion des groupes\groupmanage.cpp
+	<windows.h>
+	"resource.h"
+	<fstream>
+	"Shlobj.h"
+	<algorithm>
+	<Windowsx.h>
+	<fcntl.h>
+	<sstream>
+	<string>
+	<vector>
+	<map>
+	<mutex>
+	"typesData.h"
+	"Exeptions.h"
+	"dllTraitement.h"
+	"dllCommune.h"
+	"dllIO.h"
+
+1485194784 g:\personnel\c++\gestion des groupes\resource.h
+
+1484677596 g:\personnel\c++\gestion des groupes\typesdata.h
+
+1484677568 g:\personnel\c++\gestion des groupes\dlltraitement.h
+
+1485510596 g:\personnel\c++\gestion des groupes\dllcommune.h
+
+1484934972 g:\personnel\c++\gestion des groupes\dllio.h
+
+1485542652 source:g:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1485350214 source:g:\personnel\c++\gestion des groupes\groupmanage_private.rc
+	<windows.h>
+	"resource.rc"
+
+1485542652 g:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1473092662 source:g:\personnel\c++\gestion des groupes\groupmanage sans commentaires v3.4.cpp
 	<windows.h>
 	"resource.h"
 	<fstream>
@@ -23,25 +64,118 @@
 	"dllCommune.h"
 	"dllIO.h"
 
-1474045918 resource.h
+1474045950 source:k:\personnel\c++\gestion des groupes\exeptions.cpp
+	"Exeptions.h"
 
-1474047630 typesdata.h
+1474045980 k:\personnel\c++\gestion des groupes\exeptions.h
+	<string>
+	<windows.h>
 
-1474045976 dlltraitement.h
-
-1474047072 dllcommune.h
-
-1474045968 dllio.h
-
-1474045924 source:resource.rc
+1477823224 source:k:\personnel\c++\gestion des groupes\groupmanage.cpp
 	<windows.h>
 	"resource.h"
+	<fstream>
+	"Shlobj.h"
+	<algorithm>
+	<Windowsx.h>
+	<fcntl.h>
+	<sstream>
+	<string>
+	<vector>
+	<map>
+	"typesData.h"
+	"Exeptions.h"
+	"dllTraitement.h"
+	"dllCommune.h"
+	"dllIO.h"
 
-1474046854 source:groupmanage_private.rc
+1477128002 k:\personnel\c++\gestion des groupes\resource.h
+
+1474047630 k:\personnel\c++\gestion des groupes\typesdata.h
+
+1474045976 k:\personnel\c++\gestion des groupes\dlltraitement.h
+
+1474047072 k:\personnel\c++\gestion des groupes\dllcommune.h
+
+1474045968 k:\personnel\c++\gestion des groupes\dllio.h
+
+1474046854 source:k:\personnel\c++\gestion des groupes\groupmanage_private.rc
 	<windows.h>
 	"resource.rc"
 
-1474045924 resource.rc
+1477304066 k:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1477304066 source:k:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1474045950 source:f:\personnel\c++\gestion des groupes\exeptions.cpp
+	"Exeptions.h"
+
+1474045980 f:\personnel\c++\gestion des groupes\exeptions.h
+	<string>
+	<windows.h>
+
+1480881654 source:f:\personnel\c++\gestion des groupes\groupmanage_private.rc
+	<windows.h>
+	"resource.rc"
+
+1480945090 f:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1480944602 f:\personnel\c++\gestion des groupes\resource.h
+
+1480944928 source:f:\personnel\c++\gestion des groupes\groupmanage.cpp
+	<windows.h>
+	"resource.h"
+	<fstream>
+	"Shlobj.h"
+	<algorithm>
+	<Windowsx.h>
+	<fcntl.h>
+	<sstream>
+	<string>
+	<vector>
+	<map>
+	"typesData.h"
+	"Exeptions.h"
+	"dllTraitement.h"
+	"dllCommune.h"
+	"dllIO.h"
+
+1474047630 f:\personnel\c++\gestion des groupes\typesdata.h
+
+1474045976 f:\personnel\c++\gestion des groupes\dlltraitement.h
+
+1474047072 f:\personnel\c++\gestion des groupes\dllcommune.h
+
+1474045968 f:\personnel\c++\gestion des groupes\dllio.h
+
+1480945090 source:f:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1474045950 source:i:\personnel\c++\gestion des groupes\exeptions.cpp
+	"Exeptions.h"
+
+1474045980 i:\personnel\c++\gestion des groupes\exeptions.h
+	<string>
+	<windows.h>
+
+1480881654 source:i:\personnel\c++\gestion des groupes\groupmanage_private.rc
+	<windows.h>
+	"resource.rc"
+
+1480945090 i:\personnel\c++\gestion des groupes\resource.rc
+	<windows.h>
+	"resource.h"
+
+1480944602 i:\personnel\c++\gestion des groupes\resource.h
+
+1480945090 source:i:\personnel\c++\gestion des groupes\resource.rc
 	<windows.h>
 	"resource.h"
 

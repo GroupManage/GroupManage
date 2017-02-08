@@ -1,7 +1,7 @@
 /*
 GroupManage was built in order to simplify the creation of groups. Please refer to the documentation for more details.
 
-Copyright (C) 2016  Simon Vareille
+Copyright (C) 2016-2017  Simon Vareille
 
 This file is part of GroupManage.
 
@@ -18,6 +18,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GroupManage. If not, see <http://www.gnu.org/licenses/>.
 
+In addition, as a special exception, the copyright holders give
+permission to link the code of portions of this program with the
+OpenSSL library. You must obey the GNU General Public License in
+all respects for all of the code used other than OpenSSL. If you
+modify file(s) with this exception, you may extend this exception
+to your version of the file(s), but you are not obligated to do so.
+If you do not wish to do so, delete this exception statement from
+your version. If you delete this exception statement from all source
+files in the program, then also delete it here.
+
 For any questions or suggestions, please contact me at <groupmanage.assistance@gmail.com>
 */
 
@@ -31,6 +41,7 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #include <time.h>
 #include <algorithm>
 #include <cstdio>
+#include <sstream>
 
 using namespace std;
 
@@ -41,6 +52,13 @@ using namespace std;
 #include "dllTraitement.h"
 
 #define DLLEXPORT __declspec (dllexport)
+
+template<typename T> string to_string(T const &var)
+{
+    ostringstream oss;
+    oss<<var;
+    return oss.str();
+}
 
 BOOL APIENTRY DllMain (HINSTANCE hInst     /* Library instance handle. */ ,
                        DWORD reason        /* Reason this function is being called. */ ,
@@ -620,7 +638,7 @@ void Traitement(vector<enfantActi> &enfants, vector<InfoActivite> &activite)
 
 int DLLEXPORT Initialisation(vector<enfantActi> &enfants, vector<enfantActi> &enfantsAttributed, vector<InfoActivite> &activite,
                               char &inferieurA, bool &traitementLance, bool &arretTraitement,
-                              HWND hDlgTraitementEnCours)
+                              HWND &hDlgTraitementEnCours)
 {
     for(int i=0;i<enfants.size();)
 	{
@@ -634,7 +652,8 @@ int DLLEXPORT Initialisation(vector<enfantActi> &enfants, vector<enfantActi> &en
 	 	}
 	}
 
-	for(int i=0;i<enfants.size();)
+	//On supprime les élèves qui n'ont rien
+	/*for(int i=0;i<enfants.size();)
 	{
 	    if(enfants[i].voeux[0].voeu1==-1 && enfants[i].voeux[0].voeu2==-1 && enfants[i].voeux[0].voeu3==-1 &&
 	       enfants[i].voeux[1].voeu1==-1 && enfants[i].voeux[1].voeu2==-1 && enfants[i].voeux[1].voeu3==-1 &&
@@ -647,7 +666,7 @@ int DLLEXPORT Initialisation(vector<enfantActi> &enfants, vector<enfantActi> &en
 		{
 	 	    i++;
 	 	}
-	}
+	}*/
 
     int nbEleveMax=enfants.size();
 
@@ -745,7 +764,7 @@ int DLLEXPORT Initialisation(vector<enfantActi> &enfants, vector<enfantActi> &en
 			pTempFile=fopen(tempFileName,"w+");
   			if(pTempFile==NULL)
 		 	{
-		  	    arretTraitement=false;
+		  	    arretTraitement=true;
 		    	traitementLance=false;
 		    	SetLastError(ERROR_OPEN_FAILED);
 		  	    return 1;
@@ -767,23 +786,27 @@ int DLLEXPORT Initialisation(vector<enfantActi> &enfants, vector<enfantActi> &en
 			if(hDlgTraitementEnCours!=NULL)
 		 	{
 	   		    string sMoyenneVoeux="Voeu attribué en moyenne: ";
-	   		    char smoyenne[10];
-	   		    sprintf(smoyenne,"%.4f",moyennePoints*3);
-	   		    sMoyenneVoeux+=smoyenne;
+	   		    sMoyenneVoeux+=to_string(moyennePoints*3);
+	   		    //char smoyenne[10];
+	   		    //sprintf(smoyenne,"%.4f",moyennePoints*3);
+	   		    //sMoyenneVoeux+=smoyenne;
 		 	    SetDlgItemText(hDlgTraitementEnCours,IDT_MOYENNEVOEUX,sMoyenneVoeux.c_str());
 			}
 
 	 	}
 	 	//actualisation du nombre de cycles
-	 	++nbCycles;
+
+
+	 	nbCycles++;
+
 
 	 	if(hDlgTraitementEnCours!=NULL)
 	 	{
-            char scycles[22];
-            sprintf(scycles,"%llu",nbCycles);
-            SetDlgItemText(hDlgTraitementEnCours,IDT_CYCLE,scycles);
+            string scycles=to_string(nbCycles);
+            //sprintf(scycles,"%llu",nbCycles);
+            SetDlgItemText(hDlgTraitementEnCours,IDT_CYCLE,scycles.c_str());
 		}
-		string fiable="Fiabilité estimée: ";
+		/*string fiable="Fiabilité estimée: ";
 
 		if(nbCycles>=nbBoucleFiable[0] && nbCycles<nbBoucleFiable[1] && inferieurA<2)
 		{
@@ -843,7 +866,7 @@ int DLLEXPORT Initialisation(vector<enfantActi> &enfants, vector<enfantActi> &en
 		{
 		    SetDlgItemText(hDlgTraitementEnCours,IDT_FIABILITE,fiable.c_str());
 		    changeTextFiable=false;
-		}
+		}*/
 	}
 	fflush (pTempFile);
 

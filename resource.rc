@@ -1,7 +1,7 @@
 /*
 GroupManage was built in order to simplify the creation of groups. Please refer to the documentation for more details.
 
-Copyright (C) 2016  Simon Vareille
+Copyright (C) 2016-2017  Simon Vareille
 
 This file is part of GroupManage.
 
@@ -18,13 +18,22 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GroupManage. If not, see <http://www.gnu.org/licenses/>.
 
+In addition, as a special exception, the copyright holders give
+permission to link the code of portions of this program with the
+OpenSSL library. You must obey the GNU General Public License in
+all respects for all of the code used other than OpenSSL. If you
+modify file(s) with this exception, you may extend this exception
+to your version of the file(s), but you are not obligated to do so.
+If you do not wish to do so, delete this exception statement from
+your version. If you delete this exception statement from all source
+files in the program, then also delete it here.
+
 For any questions or suggestions, please contact me at <groupmanage.assistance@gmail.com>
 */
-
 #include <windows.h>
 #include "resource.h"
-//500 ICON MOVEABLE PURE LOADONCALL DISCARDABLE "C:/Documents and Settings/All Users/Documents/Python/icone3.ico"
 IDI_ICON ICON "Icones/icone_principale.ico"
+//500 ICON MOVEABLE PURE LOADONCALL DISCARDABLE "C:/Documents and Settings/All Users/Documents/Python/icone3.ico"
 
 IDI_ICONGRMA ICON "Icones/icone GRMA.ico"//C:\Dev-Cpp\DevCpp.exe,5 //"G:\Personnel\C++\gestion des groupes\release\GroupManage.exe",504 //%Windir%\System32\rundll32.exe USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
 IDI_ICONEAC  ICON "Icones/icone EAC.ico"
@@ -62,13 +71,18 @@ BEGIN
     POPUP "Réviser"
     BEGIN
         MENUITEM "Vérifier le remplissage\tCtrl+R",IDM_VERIF_REMPLI
-        MENUITEM "Dénombrer le nombre de demandes\tCtrl+P",IDM_COUNT_APPLICATION
+        //MENUITEM "Dénombrer le nombre de demandes\tCtrl+P",IDM_COUNT_APPLICATION
         MENUITEM "Vérifier les activités",IDM_VERIF_ACTI
+    END
+    POPUP "Propriétés"
+    BEGIN
+        MENUITEM "Gesionnaire de mises à jour", IDM_SETTINGS_UPDATE
     END
     POPUP "?"
     BEGIN
         MENUITEM "Rubrique d'aide\tF1",IDM_HELP
         MENUITEM SEPARATOR
+        MENUITEM "Rechercher des mises à jour", IDM_SEARCHUPDATE
         MENUITEM "A-propos",IDM_ABOUT
     END
 END
@@ -109,7 +123,7 @@ DIALOGSORTIE DIALOGEX
 
     50, 10, 625, 375
 
-          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX | WS_MAXIMIZEBOX
           EXSTYLE WS_EX_TOPMOST
 
                                                CAPTION "Résultat du traitement"
@@ -266,7 +280,7 @@ DIALOGTRAITEMENTENCOURS DIALOGEX
 BEGIN
     LTEXT "Traitement en cours. Pour l'arrêter, veuillez appuyer sur Arrêter.", IDT_MAINTXT, 10, 5, 400, 12, WS_GROUP
     LTEXT "Le traitement ne sarrêtera pas tant que vous n'aurez pas appuyé sur le boutton Arrêter.\nPlus vous laisserez le programme tourner, plus le résultat sera fiable.",-1,10,20, 400, 24, WS_GROUP
-    LTEXT "Fiabilité estimée: inférieur à 10%",IDT_FIABILITE, 90, 45, 150, 12
+    //LTEXT "Fiabilité estimée: inférieur à 10%",IDT_FIABILITE, 90, 45, 150, 12
     LTEXT "Voeu attribué en moyenne: 0",IDT_MOYENNEVOEUX, 95, 60, 150, 12
 	CONTROL "", IDE_PB1, PROGRESS_CLASS, PBS_MARQUEE, 50, 75, 190, 12
 	LTEXT "Temps écoulé : 0:0:0",IDT_TEMPS, 110, 90, 100, 12
@@ -300,14 +314,14 @@ DIALOGMODIFACTI DIALOGEX
 
 BEGIN
     LTEXT "Nom de l'activité: ",0,10,12,100,12
-    EDITTEXT IDE_EDITMODIFNAME,75,10, 80, 12,ES_CENTER
+    EDITTEXT IDE_EDITMODIFNAME,75,10, 100, 12, ES_AUTOHSCROLL
 
     LTEXT "Nombre de places: ",0,10,32,100,12
     CONTROL "",IDE_UPDOWN,UPDOWN_CLASS,WS_VISIBLE | WS_CHILD| UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS,95,30,20,12
     EDITTEXT IDE_EDITMODIFPLACES,75,30,20,12,ES_CENTER | ES_NUMBER
 
     LTEXT "Jour de l'activité: ",0,10,52,100,12
-    COMBOBOX IDE_COMBOBOX,75,50,80,12,CBS_DROPDOWNLIST
+    COMBOBOX IDE_COMBOBOX,75,50,100,12,CBS_DROPDOWNLIST
 
     PUSHBUTTON "Sélectionner les classes correspondantes", ID_BUTTONCLASSES, 25, 80, 150, 12
     PUSHBUTTON "OK", IDOK, 50, 105, 50, 12, WS_GROUP | BS_CENTER
@@ -326,4 +340,27 @@ DIALOGABOUT DIALOGEX
 BEGIN
     CONTROL "", ID_ETCHEDFRAME, "STATIC", SS_ETCHEDFRAME , 10, 2, 280, 138
 
+END
+
+DIALOGSETTINGSUPDATE DIALOGEX
+
+    50, 30, 230, 120
+
+          STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+
+                                               CAPTION "Gestionnaire de mises à jour"
+
+BEGIN
+
+    LTEXT "Choisissez les paramètres de mise à jour:", 0, 10, 10, 200, 12
+
+    AUTOCHECKBOX "Rechercher les mises à jour :", ID_SEARCHUPDATE, 10, 20, 150, 12, BS_AUTOCHECKBOX
+    AUTORADIOBUTTON "Au démarrage de l'ordinateur (ralenti le démarrage).", IDC_RADIO1, 20, 30, 200, 12
+    AUTORADIOBUTTON "Au lancement de GroupManage.", IDC_RADIO2, 20, 40, 200, 12
+    AUTOCHECKBOX "Installer la mise à jour automatiquement (ne pas m'avertir).", ID_INSTALLUPDATE, 20, 50, 200, 12, BS_AUTOCHECKBOX
+
+    LTEXT "Les mises à jour ne seront jamais effectuées.", IDT_RESULTCHOICE, 10, 70, 200, 24
+
+    PUSHBUTTON "OK", IDOK, 60, 105, 50, 12, WS_GROUP | BS_CENTER
+    PUSHBUTTON "Annuler", IDCANCEL, 110, 105, 50, 12
 END

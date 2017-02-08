@@ -1,7 +1,7 @@
 /*
 GroupManage was built in order to simplify the creation of groups. Please refer to the documentation for more details.
 
-Copyright (C) 2016  Simon Vareille
+Copyright (C) 2016-2017  Simon Vareille
 
 This file is part of GroupManage.
 
@@ -17,6 +17,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GroupManage. If not, see <http://www.gnu.org/licenses/>.
+
+In addition, as a special exception, the copyright holders give
+permission to link the code of portions of this program with the
+OpenSSL library. You must obey the GNU General Public License in
+all respects for all of the code used other than OpenSSL. If you
+modify file(s) with this exception, you may extend this exception
+to your version of the file(s), but you are not obligated to do so.
+If you do not wish to do so, delete this exception statement from
+your version. If you delete this exception statement from all source
+files in the program, then also delete it here.
 
 For any questions or suggestions, please contact me at <groupmanage.assistance@gmail.com>
 */
@@ -76,7 +86,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
                                  HWND const &hButtonAdd, HWND const &hCheckboxCasesVide, HWND const &hScroll, HWND const &hComboActi,
                                  vector<HWND> &hComboV1, vector<HWND> &hComboV2, vector<HWND> &hComboV3,
                                  vector<enfantActi> const &enfants, vector<InfoActivite> const &activite,
-                                 UINT const &nbLigne, UINT &iItemSel,
+                                 UINT const &nbLigne, UINT &iItemSel, int &iActiEnCour,
                                  string const &pathFileOpen)
 {
     while(hComboV1.size())
@@ -103,7 +113,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 
 	LONG Styles=WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_GROUP | CBS_DROPDOWNLIST | CBS_SORT ;//CBS_DROPDOWNLIST |
 
-	if(enfants.size()!=0)
+
+	if(enfants.size()>0)
  	{
 
 		RECT rectHwnd;
@@ -116,9 +127,10 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 		{
 		    SendMessage(hComboV1[0],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
 		}
-		SendMessage(hwnd, MSG_SUBCLASSCONTROL, MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV1.back());
+		if(activite.size()!=0)SendMessage(hComboV1[0],CB_SETCURSEL,SendMessage(hComboV1[0],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[0].voeux[0].voeu1].nom.c_str()),0);
+        else SendMessage(hComboV1[0],CB_SETCURSEL, 0, 0);
+        SendMessage(hwnd, MSG_SUBCLASSCONTROL, MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV1.back());
 
-		SendMessage(hComboV1[0],CB_SETCURSEL,SendMessage(hComboV1[0],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[0].voeux[0].voeu1].nom.c_str()),0);
 		hComboV2.push_back(CreateWindowEx(0,"COMBOBOX","Activite", Styles,30+rectHwnd.right*5/24+(((rectHwnd.right*5/8)-(rectHwnd.right*5/24))/3)-1,30+20,((rectHwnd.right*5/8)-(rectHwnd.right*5/24))/3,20,hwnd,(HMENU)ID_COMBOV2,0,0));
 		//hCombo[i]=CreateWindowEx(0,"COMBOBOX","Activite",WS_VISIBLE | WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST ,10+rectHwnd.right*5/24+(((rectHwnd.right*5/8)-(rectHwnd.right*5/24))/3)*j-1,10+20+23*i,((rectHwnd.right*5/8)-(rectHwnd.right*5/24))/3,20,hwnd,0,0,0);
 		SendMessage(hComboV2[0],CB_ADDSTRING,(WPARAM) 0,(Button_GetCheck(hCheckboxCasesVide)==BST_CHECKED) ? (LPARAM)"Pas de choix" : (LPARAM)" ");
@@ -126,7 +138,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 		{
 		    SendMessage(hComboV2[0],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
 		}
-		SendMessage(hComboV2[0],CB_SETCURSEL,SendMessage(hComboV2[0],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[0].voeux[0].voeu2].nom.c_str()),0);
+		if(activite.size()!=0)SendMessage(hComboV2[0],CB_SETCURSEL,SendMessage(hComboV2[0],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[0].voeux[0].voeu2].nom.c_str()),0);
+		else SendMessage(hComboV2[0],CB_SETCURSEL, 0, 0);
 		SendMessage(hwnd, MSG_SUBCLASSCONTROL,MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV2.back());
 
 
@@ -136,7 +149,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 		{
 		    SendMessage(hComboV3[0],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
 		}
-		SendMessage(hComboV3[0],CB_SETCURSEL,SendMessage(hComboV3[0],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[0].voeux[0].voeu3].nom.c_str()),0);
+		if(activite.size()!=0)SendMessage(hComboV3[0],CB_SETCURSEL,SendMessage(hComboV3[0],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[0].voeux[0].voeu3].nom.c_str()),0);
+		else SendMessage(hComboV3[0],CB_SETCURSEL, 0, 0);
 		SendMessage(hwnd, MSG_SUBCLASSCONTROL,MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV3.back());
 
 
@@ -154,6 +168,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 		GetWindowRect(hListboxClasse,&rect);
 		SetWindowPos(hListboxClasse,0,0,0,rect.right-rect.left,rect.bottom-rect.top+25,SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
+
 		GetWindowRect(hButtonAdd,&rect);
 		pt.x=rect.left;
 		pt.y=rect.top;
@@ -163,6 +178,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 		EnableWindow(hScroll,false);
 		else
 		EnableWindow(hScroll,true);
+
+
 		for(int i=1;i<enfants.size();i++)
 		{
 		    if(i>=nbLigne-1)
@@ -184,7 +201,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 			}
 			SendMessage(hwnd, MSG_SUBCLASSCONTROL,MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV1.back());
 			//SendMessage(hCombo[i],CB_SETCURSEL,0,0);
-			SendMessage(hComboV1[i],CB_SETCURSEL,SendMessage(hComboV1[i],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[i].voeux[0].voeu1].nom.c_str()),0);
+			if(activite.size()!=0)SendMessage(hComboV1[i],CB_SETCURSEL,SendMessage(hComboV1[i],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[i].voeux[0].voeu1].nom.c_str()),0);
+            else SendMessage(hComboV1[i],CB_SETCURSEL, 0, 0);
 
 			GetWindowRect(hComboV2[0],&rectItem);
 	 		pt.x=rectItem.left;
@@ -198,7 +216,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 			    SendMessage(hComboV2[i],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
 			}
 			SendMessage(hwnd, MSG_SUBCLASSCONTROL,MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV2.back());
-			SendMessage(hComboV2[i],CB_SETCURSEL,SendMessage(hComboV2[i],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[i].voeux[0].voeu2].nom.c_str()),0);
+			if(activite.size()!=0)SendMessage(hComboV2[i],CB_SETCURSEL,SendMessage(hComboV2[i],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[i].voeux[0].voeu2].nom.c_str()),0);
+            else SendMessage(hComboV2[i],CB_SETCURSEL, 0, 0);
 
 			GetWindowRect(hComboV3[0],&rectItem);
 	 		pt.x=rectItem.left;
@@ -211,7 +230,8 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 			    SendMessage(hComboV3[i],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
 			}
 			SendMessage(hwnd, MSG_SUBCLASSCONTROL,MAKEWPARAM(SUB_COMBOVOEU,0), (LPARAM)hComboV3.back());
-			SendMessage(hComboV3[i],CB_SETCURSEL,SendMessage(hComboV3[i],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[i].voeux[0].voeu3].nom.c_str()),0);
+			if(activite.size()!=0)SendMessage(hComboV3[i],CB_SETCURSEL,SendMessage(hComboV3[i],CB_FINDSTRINGEXACT,(WPARAM)-1,(LPARAM)activite[enfants[i].voeux[0].voeu3].nom.c_str()),0);
+            else SendMessage(hComboV3[i],CB_SETCURSEL, 0, 0);
 
 			SendMessage(hListboxNom,LB_ADDSTRING,0,(LPARAM)enfants[i].nom.c_str());
 			SendMessage(hListboxNom,LB_SETITEMDATA,i, i);
@@ -275,7 +295,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 	string lineStatu="Nombre d'enfants en tout: ";
 	lineStatu+=nbEnfants;
 	SendMessage(hstatu,SB_SETTEXT,MAKELONG(0,0),(LPARAM)const_cast<char*>(lineStatu.c_str()));
-	lineStatu="Nombre d'enfants prÃ©sents le ";
+	lineStatu="Nombre d'enfants présents le ";
 	string nmJour[4]={"lundi: ","mardi: ","jeudi: ","vendredi: "};
 	nbEnfantJour=0;
 	for(int jour=0;jour<4;jour++)
@@ -287,7 +307,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
   			    nbEnfantJour++;
   			}
 	    }
-	    lineStatu="Nombre d'enfants prÃ©sents le ";
+	    lineStatu="Nombre d'enfants présents le ";
 	    lineStatu+=nmJour[jour];
 	    nbEnfants=to_string(nbEnfantJour);
 	    lineStatu+=nbEnfants;
@@ -310,6 +330,7 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
     }
 	SetWindowText(hwnd,titre.c_str());
 
+	//Actualisation des activités
 	iItemSel=0;
     ComboBox_ResetContent(hComboActi);
 	int iItemAdd;
@@ -320,7 +341,9 @@ void DLLEXPORT AfficheNouveauTab(HWND const &hwnd, HWND const &hListboxNom, HWND
 	}
 
 	ComboBox_SetCurSel(hComboActi,0);
+	iActiEnCour=ComboBox_GetItemData(hComboActi,0);
 
+	//Sélection du premier élève
 	SendMessage(hListboxNom,LB_SETCURSEL,0,0);
 	SendMessage(hListboxClasse,LB_SETCURSEL,0,0);
 }
@@ -331,7 +354,7 @@ void DLLEXPORT RemplirListeClasse(vector<enfantActi> const &enfants, vector<Info
     size_t foundNew=0;
     bool classeNonPresente=true;
     string str;
-    //recherche dans les activitÃ©s
+    //recherche dans les activités
     for(int i=0;i<activite.size();i++)
     {
 	    found=0;
@@ -362,7 +385,7 @@ void DLLEXPORT RemplirListeClasse(vector<enfantActi> const &enfants, vector<Info
 			foundNew=activite[i].classe.find('\t',found);
 		}
 	}
-	//recherche dans les Ã©lÃ¨ves
+	//recherche dans les élèves
 	classeNonPresente=true;
 	for(int jour=0;jour<4;jour++)
 	{
@@ -401,8 +424,8 @@ bool DLLEXPORT CreateToolTip(HWND hwnd, HWND &hwndToolTips, HINSTANCE const &hin
     toolInfo.hwnd = hwnd;
     toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS | TTF_TRACK;
     toolInfo.uId = (UINT_PTR)hwnd;
-    toolInfo.lpszText = (LPSTR)"Enregistrez cette feuille si vous Ãªtes sur qu'elle convient.\n\
-Enregistrez-lÃ  grÃ¢ce Ã  \"Enregistrer sous...\".";
+    toolInfo.lpszText = (LPSTR)"Enregistrez cette feuille si vous êtes sur qu'elle convient.\n\
+Enregistrez-là grâce à \"Enregistrer sous...\".";
     SendMessage(hwndToolTips, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
 
     SendMessage(hwndToolTips,TTM_SETTITLEA,1,(LPARAM)"Enregistrer la feuille");
@@ -442,7 +465,7 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, vector<enfantActi> const &enf
 	string lineStatu="Nombre d'enfants en tout: ";
 	lineStatu+=nbEnfants;
 	SendMessage(hstatu,SB_SETTEXT,MAKELONG(0,0),(LPARAM)lineStatu.c_str());
-	lineStatu="Nombre d'enfants prÃ©sents le ";
+	lineStatu="Nombre d'enfants présents le ";
 	string nmJour[4]={"lundi: ","mardi: ","jeudi: ","vendredi: "};
 	nbEnfantJour=0;
 	for(int jour=0;jour<4;jour++)
@@ -454,7 +477,7 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, vector<enfantActi> const &enf
   			    nbEnfantJour++;
   			}
 	    }
-	    lineStatu="Nombre d'enfants prÃ©sents le ";
+	    lineStatu="Nombre d'enfants présents le ";
 	    lineStatu+=nmJour[jour];
 	    nbEnfants=to_string(nbEnfantJour);
 	    lineStatu+=nbEnfants;
@@ -473,14 +496,15 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, HWND const &hListboxNom)
 
     vector<int> myList(list,list+count);
     sort(myList.begin(),myList.end());
+    if(myList.size()==0)return 1;
 
     string a;
     a=to_string(count);
-    string sSel="SÃ©lectionnÃ©s: "+a;
+    string sSel="Sélectionnés: "+a;
     a=to_string(myList[0]+1);
     string sRange="De "+a;
     a=to_string(myList[myList.size()-1]+1);
-    sRange+=" Ã  "+a;
+    sRange+=" à "+a;
 
     delete[] list;
 
@@ -496,6 +520,8 @@ bool DLLEXPORT UpdateStatusBar(HWND const &hstatu, HWND const &hListboxNom)
 
     SendMessage(hstatu,SB_SETTEXT,MAKELONG(0,0),(LPARAM)sSel.c_str());
     SendMessage(hstatu,SB_SETTEXT,MAKELONG(1,SBT_POPOUT),(LPARAM)sRange.c_str());
+
+    return 0;
 }
 
 void DLLEXPORT VoirErreur(unsigned long error)//VoirErreur(GetLastError());
@@ -516,11 +542,9 @@ void DLLEXPORT VoirErreur(unsigned long error,const char *titre)//VoirErreur(Get
 
 int DLLEXPORT stricmp(string a, string b)
 {
-    string outa;
-    string outb;
 
-    transform(a.begin(), a.end(), outa.begin(), ::tolower);
-    transform(b.begin(), b.end(), outb.begin(), ::tolower);
+    transform(a.begin(), a.end(), a.begin(), ::tolower);
+    transform(b.begin(), b.end(), b.begin(), ::tolower);
 
-    return outa.compare(outb);
+    return a.compare(b);
 }

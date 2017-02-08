@@ -1,7 +1,7 @@
 /*
 GroupManage was built in order to simplify the creation of groups. Please refer to the documentation for more details.
 
-Copyright (C) 2016  Simon Vareille
+Copyright (C) 2016-2017  Simon Vareille
 
 This file is part of GroupManage.
 
@@ -17,6 +17,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GroupManage. If not, see <http://www.gnu.org/licenses/>.
+
+In addition, as a special exception, the copyright holders give
+permission to link the code of portions of this program with the
+OpenSSL library. You must obey the GNU General Public License in
+all respects for all of the code used other than OpenSSL. If you
+modify file(s) with this exception, you may extend this exception
+to your version of the file(s), but you are not obligated to do so.
+If you do not wish to do so, delete this exception statement from
+your version. If you delete this exception statement from all source
+files in the program, then also delete it here.
 
 For any questions or suggestions, please contact me at <groupmanage.assistance@gmail.com>
 */
@@ -34,6 +44,7 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 //#include <ctime>
 #include <algorithm>
 #include <Windowsx.h>
+//#include <winuser.h>
 //#include <commctrl.h>
 #include <fcntl.h>
 //#include <cmath>
@@ -41,6 +52,8 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 //STL
 #include <string>
 #include <vector>
+#include <map>
+#include <mutex>
 
 using namespace std;
 #include "typesData.h"
@@ -122,7 +135,7 @@ vector<string> nomClasses;
 
 UINT cxyAvant;
 UINT iItemEdit;
-UINT iItemSel;
+UINT iItemSel=0;
 UINT tempsEcoule=0;
 int iActiEnCour=0;
 int iItemModifActi;
@@ -131,9 +144,8 @@ unsigned char jourEnCourSaisie=0;
 char backUpActivite=-1;
 bool nouvActi=false;
 bool nouvJour=false;
-bool traitementLance=false;
+bool traitementLance=false;//Protéger par un mutex
 bool arretTraitement=false;
-bool destroyEdit=false;
 bool editActiActivate=false;
 bool lectureSeule=false;
 bool isFileSaved=true;
@@ -146,12 +158,17 @@ vector< enfantActi > enfantsAttributed;
 
 vector<InfoActivite> activite;
 
+//std::mutex mtxNbCycles
+
+
 //HINSTANCE hinst;
 /*  Declare Windows procedure  */
 
 
-void RemplacerCasesVides(int index, char *sRemplacer, char *sRemplacement)
+bool RemplacerCasesVides(int index, char *sRemplacer, char *sRemplacement)
 {
+    if(hComboV1.size()<=index || hComboV2.size()<=index || hComboV3.size()<=index)return 1;
+
     if(ComboBox_FindStringExact(hComboV1[index],-1,sRemplacer)!=CB_ERR)
 	{
 	    SendMessage(hComboV1[index],CB_DELETESTRING,(WPARAM) ComboBox_FindStringExact(hComboV1[index],-1,sRemplacer),0);
@@ -167,6 +184,7 @@ void RemplacerCasesVides(int index, char *sRemplacer, char *sRemplacement)
 	    SendMessage(hComboV3[index],CB_DELETESTRING,(WPARAM) ComboBox_FindStringExact(hComboV3[index],-1,sRemplacer),0);
 	    SendMessage(hComboV3[index],CB_ADDSTRING,(WPARAM) 0,(LPARAM)sRemplacement);
 	}
+	return 0;
 }
 void AjoutTabStop()
 {
@@ -309,6 +327,7 @@ BOOL APIENTRY DialogVerifActi(HWND,UINT, WPARAM, LPARAM);
 BOOL APIENTRY DialogModifActi(HWND,UINT, WPARAM, LPARAM);
 BOOL APIENTRY DialogCountAppliProc(HWND,UINT, WPARAM, LPARAM);
 BOOL APIENTRY DialogAboutProc(HWND,UINT, WPARAM, LPARAM);
+BOOL APIENTRY DialogSettingsUpdate(HWND,UINT, WPARAM, LPARAM);
 
 BOOL CALLBACK EnumChildProc(HWND hwnd,LPARAM lParam);
 BOOL CALLBACK EnumChildStartPosProc(HWND hwnd,LPARAM lParam);
@@ -325,7 +344,6 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmd, int show)
  	    //strcpy(pathFileOpen,cmd);
 	}
 
-	///Manipulation du registre
     /*
 	//regarde si l'extension .grma est associée à GroupManage
 	{
@@ -423,7 +441,7 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmd, int show)
 	//wc.cbSize=sizeof(WNDCLASSEX);
 	wc.hInstance=hinst;
 	wc.lpszMenuName = "ID_MENU";
-	wc.lpszClassName="fenetre";
+	wc.lpszClassName="GroupManageMainWindow";
 	wc.lpfnWndProc=WinProc;
 	wc.hCursor=LoadCursor(0,IDC_ARROW);
 	wc.hIcon=LoadIcon(wc.hInstance,MAKEINTRESOURCE(IDI_ICON));//IDI_APPLICATION
@@ -436,7 +454,48 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmd, int show)
 	// Création de notre fenêtre:
 	DWORD styles=WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE | WS_MAXIMIZEBOX;//| WS_MAXIMIZEBOX | WS_SIZEBOX | WS_HSCROLL | WS_VSCROLL;
 
-	hWndMain=CreateWindowEx(WS_EX_APPWINDOW,"fenetre","Gestion des groupes",styles, -3,-3,Ecran.x+6,Ecran.y-GetHeigthTray(false)+6,NULL,NULL,hinst,NULL);//500
+	hWndMain=CreateWindowEx(WS_EX_APPWINDOW,"GroupManageMainWindow","Gestion des groupes",styles, -3,-3,Ecran.x+6,Ecran.y-GetHeigthTray(false)+6,NULL,NULL,hinst,NULL);//500
+
+	///Manipulation du registre
+	//Regarde si la mise à jours est à faire
+    HKEY key;
+    DWORD kSize=MAX_PATH;
+    char mem[MAX_PATH] = "";
+    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\GroupManage.exe", 0, KEY_READ, &key);
+
+    if(RegQueryValueEx(key, "LunchUpdate", NULL, NULL, (BYTE*)mem, &kSize)==ERROR_SUCCESS)
+    {
+        PROCESS_INFORMATION Process = {0};
+        STARTUPINFO Start = {0};
+        Start.cb = sizeof(STARTUPINFO);
+        Start.lpReserved = NULL;
+        Start.lpReserved2 = NULL;
+        Start.cbReserved2 = 0;
+        Start.lpDesktop = NULL;
+        Start.dwFlags = 0;
+
+        std::string sparam=std::string(mem);
+        if(sparam.compare("-searchButNotDownload_Notify")==0)
+        {
+            sparam="Update.exe -searchButNotDownload_Notify ";
+            std::vector<char> className(100, 0);
+            GetClassName(hWndMain, &className[0], 100);
+            sparam+=std::string(className.begin(), className.end());
+        }
+        else
+        {
+            sparam="Update.exe -update";
+        }
+
+        std::vector<char> parameters(sparam.begin(), sparam.end());
+        parameters.push_back('\0');
+
+        CreateProcess("Update.exe", &parameters[0], NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &Start, &Process);
+        CloseHandle(Process.hProcess);
+        CloseHandle(Process.hThread);
+    }
+
+    RegCloseKey(key);
 
 	/*RECT rect;
 	GetClientRect(hWndMain,&rect);
@@ -749,7 +808,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}*/
 
 			//Listview
-			LVCOLUMN lvc;
+			/*LVCOLUMN lvc;
     		int iCol=0;
     		lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT ;
     		lvc.iSubItem = 0;
@@ -797,7 +856,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ListView_SetItemText(hListviewL,1,0, "b")
 			ListView_SetItemText(hListviewL,1,1, "b")
 			ListView_SetItemText(hListviewL,1,2, "b")
-			ListView_SetItemText(hListviewL,1,3, "b")
+			ListView_SetItemText(hListviewL,1,3, "b")*/
 
 			//Fin Listview
 		    string sBackUp="~&Nouveau document GRMA.grma";
@@ -890,10 +949,13 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
                         bool arret=false;
                         for(int j=0;j<2 && !arret;j++)
                         {
-                            for(int i=0;i<enfants.size()-1;)
+
+                            for(int i=0;i<int(enfants.size()-1);)
                             {
                                 int iEnfant1=SendMessage(hListboxNom,LB_GETITEMDATA,i,0);
                                 int iEnfant2=SendMessage(hListboxNom,LB_GETITEMDATA,i+1,0);
+
+                                if(iEnfant1<0 || iEnfant1>=enfants.size() || iEnfant2<0 || iEnfant2>=enfants.size()){i++;continue;}
 
                                 if((j==0)? (enfants[iEnfant1].nom > enfants[iEnfant2].nom) : (enfants[iEnfant1].nom < enfants[iEnfant2].nom))
                                 {
@@ -939,10 +1001,12 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
                         bool arret=false;
                         for(int j=0;j<2 && !arret;j++)
                         {
-                            for(int i=0;i<enfants.size()-1;)
+                            for(int i=0;i<int(enfants.size()-1);)
                             {
                                 int iEnfant1=SendMessage(hListboxNom,LB_GETITEMDATA,i,0);
                                 int iEnfant2=SendMessage(hListboxNom,LB_GETITEMDATA,i+1,0);
+
+                                if(iEnfant1<0 || iEnfant1>=enfants.size() || iEnfant2<0 || iEnfant2>=enfants.size()){i++;continue;}
 
                                 if((j==0)? (enfants[iEnfant1].classe > enfants[iEnfant2].classe) : (enfants[iEnfant1].classe < enfants[iEnfant2].classe))
                                 {
@@ -988,10 +1052,12 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
                         bool arret=false;
                         for(int j=0;j<2 && !arret;j++)
                         {
-                            for(int i=0;i<enfants.size()-1;)
+                            for(int i=0;i<int(enfants.size()-1);)
                             {
                                 int iEnfant1=SendMessage(hListboxNom,LB_GETITEMDATA,i,0);
                                 int iEnfant2=SendMessage(hListboxNom,LB_GETITEMDATA,i+1,0);
+
+                                if(iEnfant1<0 || iEnfant1>=enfants.size() || iEnfant2<0 || iEnfant2>=enfants.size()){i++;continue;}
 
                                 if((j==0)? (enfants[iEnfant1].voeux[jourEnCourSaisie].voeu1 > enfants[iEnfant2].voeux[jourEnCourSaisie].voeu1) : (enfants[iEnfant1].voeux[jourEnCourSaisie].voeu1 < enfants[iEnfant2].voeux[jourEnCourSaisie].voeu1))
                                 {
@@ -1037,10 +1103,12 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
                         bool arret=false;
                         for(int j=0;j<2 && !arret;j++)
                         {
-                            for(int i=0;i<enfants.size()-1;)
+                            for(int i=0;i<int(enfants.size()-1);)
                             {
                                 int iEnfant1=SendMessage(hListboxNom,LB_GETITEMDATA,i,0);
                                 int iEnfant2=SendMessage(hListboxNom,LB_GETITEMDATA,i+1,0);
+
+                                if(iEnfant1<0 || iEnfant1>=enfants.size() || iEnfant2<0 || iEnfant2>=enfants.size()){i++;continue;}
 
                                 if((j==0)? (enfants[iEnfant1].voeux[jourEnCourSaisie].voeu2 > enfants[iEnfant2].voeux[jourEnCourSaisie].voeu2) : (enfants[iEnfant1].voeux[jourEnCourSaisie].voeu2 < enfants[iEnfant2].voeux[jourEnCourSaisie].voeu2))
                                 {
@@ -1086,10 +1154,12 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
                         bool arret=false;
                         for(int j=0;j<2 && !arret;j++)
                         {
-                            for(int i=0;i<enfants.size()-1;)
+                            for(int i=0;i<int(enfants.size()-1);)
                             {
                                 int iEnfant1=SendMessage(hListboxNom,LB_GETITEMDATA,i,0);
                                 int iEnfant2=SendMessage(hListboxNom,LB_GETITEMDATA,i+1,0);
+
+                                if(iEnfant1<0 || iEnfant1>=enfants.size() || iEnfant2<0 || iEnfant2>=enfants.size()){i++;continue;}
 
                                 if((j==0)? (enfants[iEnfant1].voeux[jourEnCourSaisie].voeu3 > enfants[iEnfant2].voeux[jourEnCourSaisie].voeu3) : (enfants[iEnfant1].voeux[jourEnCourSaisie].voeu3 < enfants[iEnfant2].voeux[jourEnCourSaisie].voeu3))
                                 {
@@ -1358,6 +1428,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 			if(LOWORD(wParam)==ID_BUTTONGOLINE)
 			{
    			    int lEditbox=GetWindowTextLength(hEditFindLine)+1;
+   			    if(lEditbox==1)return 1;
    			    //char *sEditbox=new char[lEditbox];
    			    vector<char> sEditbox(lEditbox);
    			    GetWindowText(hEditFindLine,&sEditbox[0],lEditbox);
@@ -1379,7 +1450,6 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
                                     que iItemFind gère la liste désordonnée */
 
 		 	    int lEditbox=GetWindowTextLength(hEditFindName)+1;
-		 	    if(lEditbox==1)return true;
    			    char *sEditbox=new char[lEditbox];
    			    GetWindowText(hEditFindName,sEditbox,lEditbox);
    			    //strcat(sEditbox,'\0');
@@ -1650,6 +1720,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 
 			    //actualisation du titre
                 int tLen=GetWindowTextLength(hWndMain)+2;
+                if(tLen==2)return 1;
 	  		    char *titreFenetre=new char[tLen];
 	  		    GetWindowText(hWndMain,titreFenetre,tLen);
 	  		    if(titreFenetre[strlen(titreFenetre)-1]!='*')
@@ -1976,6 +2047,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 				UpdateStatusBar(hstatu, enfants, hWndMain);
 
 		 		int tLen=GetWindowTextLength(hWndMain)+2;
+		 		if(tLen==2)return 1;
 	  		    char *titreFenetre=new char[tLen];
 	  		    GetWindowText(hWndMain,titreFenetre,tLen);
 	  		    if(titreFenetre[strlen(titreFenetre)-1]!='*')
@@ -2021,9 +2093,17 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 				}
 				::iActiEnCour=activite.size();
 			    InfoActivite tempActi;
+			    tempActi.classe="";
+			    tempActi.demande=0;
+			    tempActi.jour=0;
+			    tempActi.nom="";
+                tempActi.placesDispo=0;
+                tempActi.placesRestantes=0;
+                tempActi.ref=iActiEnCour;
 			    //jour
  	 		    int iItem=SendMessage(hComboJour,CB_GETCURSEL,0,0);
 		 	    int tLen=SendMessage(hComboJour,CB_GETLBTEXTLEN,iItem,0)+1;
+
 		 	    char *sListbox=new char[tLen];
 		 	    SendMessage(hComboJour,CB_GETLBTEXT,iItem,(LPARAM)sListbox);
 
@@ -2045,10 +2125,13 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 
 			    //places
 			    int lEditbox = GetWindowTextLength(hEditUpDown)+1;
-			    char *sEditbox=new char[lEditbox];
-			    GetWindowText(hEditUpDown,sEditbox,lEditbox);
-			    tempActi.placesDispo=atoi(sEditbox);
-			    delete[] sEditbox;
+			    if(lEditbox>1)
+                {
+                    char *sEditbox=new char[lEditbox];
+                    GetWindowText(hEditUpDown,sEditbox,lEditbox);
+                    tempActi.placesDispo=atoi(sEditbox);
+                    delete[] sEditbox;
+                }
 			    if(tempActi.placesDispo<0)
                 {
                     tempActi.placesDispo=0;
@@ -2062,14 +2145,17 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 			    ::nouvActi=true;
 
 			    tLen=GetWindowTextLength(hWndMain)+2;
-	  		    char *titreFenetre=new char[tLen];
-	  		    GetWindowText(hWndMain,titreFenetre,tLen);
-	  		    if(titreFenetre[strlen(titreFenetre)-1]!='*')
-	  		    {
-	  		        strcat(titreFenetre,"*");
-				}
-	  		    SetWindowText(hWndMain,titreFenetre);
-	  		    delete[] titreFenetre;
+			    if(tLen>2)
+                {
+                    char *titreFenetre=new char[tLen];
+                    GetWindowText(hWndMain,titreFenetre,tLen);
+                    if(titreFenetre[strlen(titreFenetre)-1]!='*')
+                    {
+                        strcat(titreFenetre,"*");
+                    }
+                    SetWindowText(hWndMain,titreFenetre);
+                    delete[] titreFenetre;
+                }
 	  		    ::isFileSaved=false;
 			}
 		 	if(HIWORD(wParam)==LBN_DBLCLK && LOWORD(wParam)==ID_LISTBOX)
@@ -2138,7 +2224,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 				/* DONE (Simon#1#): Modifier LB_SETCURSEL
 				                    partout */
                 SendMessage(hListboxClasse,LB_SELITEMRANGE, false, MAKELPARAM(0,SendMessage(hListboxClasse,LB_GETCOUNT,0,0)));
-                int *selected=new int(SendMessage(hListboxNom,LB_GETSELCOUNT,0,0)+1);
+                int *selected=new int[SendMessage(hListboxNom,LB_GETSELCOUNT,0,0)+1];
                 SendMessage(hListboxNom,LB_GETSELITEMS,SendMessage(hListboxNom,LB_GETSELCOUNT,0,0),(LPARAM)selected);
                 for(int i=0;i<SendMessage(hListboxNom,LB_GETSELCOUNT,0,0);i++)
                 {
@@ -2179,7 +2265,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 		 		    ActualiserTabCombo(infoScroll.nPos);
 				}
 				SendMessage(hListboxNom,LB_SELITEMRANGE, false, MAKELPARAM(0,SendMessage(hListboxNom,LB_GETCOUNT,0,0)));
-                int *selected=new int(SendMessage(hListboxClasse,LB_GETSELCOUNT,0,0)+1);
+                int *selected=new int[SendMessage(hListboxClasse,LB_GETSELCOUNT,0,0)+1];
                 SendMessage(hListboxClasse,LB_GETSELITEMS,SendMessage(hListboxClasse,LB_GETSELCOUNT,0,0),(LPARAM)selected);
                 for(int i=0;i<SendMessage(hListboxClasse,LB_GETSELCOUNT,0,0);i++)
                 {
@@ -2247,6 +2333,8 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 					}
 				}*/
 				::iActiEnCour=int(ComboBox_GetItemData(hComboActi,iItem));
+
+				if(iActiEnCour>=activite.size() || iActiEnCour<0)return 1;
 				string sPlacesDispo=to_string(activite[iActiEnCour].placesDispo);
 				SetWindowText(hEditUpDown,sPlacesDispo.c_str());
 				string jour[4]={"Lundi","Mardi","Jeudi","Vendredi"};
@@ -2256,7 +2344,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 			}
 			else if(HIWORD(wParam)==CBN_SELCHANGE && (HWND)lParam==hComboJour)
 			{
- 	 		    if(activite.size()==0)return 0;
+ 	 		    if(activite.size()==0 || iActiEnCour>=activite.size() || iActiEnCour<0)return 0;
  	 		    int iItem=SendMessage(hComboJour,CB_GETCURSEL,0,0);
 		 	    int tLen=SendMessage(hComboJour,CB_GETLBTEXTLEN,iItem,0)+1;
 		 	    char *sListbox=new char[tLen];
@@ -2281,6 +2369,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
  				    if(hComboV1[i]==HWND(lParam))
    					{
 		 			    int enfantChoisi=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)+i,0);
+		 			    if(enfantChoisi<0 || enfantChoisi>=enfants.size())continue;
 		 			    int tLen=ComboBox_GetTextLength(hComboV1[i])+1;
 		 	    		char *sListbox=new char[tLen];
 		 			    ComboBox_GetText(hComboV1[i],sListbox,tLen);
@@ -2311,6 +2400,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
  				    if(hComboV2[i]==HWND(lParam))
    					{
 		 			    int enfantChoisi=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)+i,0);
+		 			    if(enfantChoisi<0 || enfantChoisi>=enfants.size())continue;
 		 			    int tLen=ComboBox_GetTextLength(hComboV2[i])+1;
 		 	    		char *sListbox=new char[tLen];
 		 			    ComboBox_GetText(hComboV2[i],sListbox,tLen);
@@ -2341,6 +2431,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
  				    if(hComboV3[i]==HWND(lParam))
    					{
 		 			    int enfantChoisi=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)+i,0);
+		 			    if(enfantChoisi<0 || enfantChoisi>=enfants.size())continue;
 		 			    int tLen=ComboBox_GetTextLength(hComboV3[i])+1;
 		 	    		char *sListbox=new char[tLen];
 		 			    ComboBox_GetText(hComboV3[i],sListbox,tLen);
@@ -2388,6 +2479,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 				    //found=0;
 				    //foundNew=0;
 					//foundNew=activite[i].classe.find('\t',found);
+					if(enfantChoisi<0 || enfantChoisi>=enfants.size())continue;
 					str=enfants[enfantChoisi].classe+"\t";
 					if(activite[i].classe.find(str)!=std::string::npos && activite[i].jour==jourEnCourSaisie)
 					{
@@ -2448,7 +2540,7 @@ Voulez-vous la récupérer ?","Sauvegarde automatique détectée",MB_ICONINFORMATION
 				SendMessage(hwnd,WM_NOTIFY,(WPARAM)NULL,(LPARAM)&nmHdr);
 			}
 
-			//######################################################### MENU ###############################################################
+			//######################################################### MENU #############################################################
 
 			///Menu Fichier
 			if(LOWORD(wParam)==IDM_OPEN)
@@ -2566,6 +2658,7 @@ Fichiers GroupManage version 2.2 et +  (*.grma)\0*.grma\0";
         				    {
         	   				    strcat(pathFile,".grma2");
         					}
+        					break;
                         }
                         case 2:
                         {
@@ -2582,6 +2675,7 @@ Fichiers GroupManage version 2.2 et +  (*.grma)\0*.grma\0";
         				    {
         	   				    strcat(pathFile,".grma");
         					}
+        					break;
                         }
                         case 3:
                         {
@@ -2599,6 +2693,7 @@ Fichiers GroupManage version 2.2 et +  (*.grma)\0*.grma\0";
         	   				    strcat(pathFile,".grma");
         					}
                         }
+                        break;
                     }
 				    /*if(ofn.nFileExtension)
 				    {
@@ -2667,6 +2762,9 @@ Fichiers GroupManage version 2.2 et +  (*.grma)\0*.grma\0";
 	  			    SendMessage(hwnd,WM_COMMAND,LOWORD(IDM_SAVEAS),0);
 	  			    return 0;
 	  			}
+	  			/*string str=activite[0].nom.c_str();
+	  			MessageBox(0,str.c_str(),0,0);
+                MessageBox(0,activite[0].nom.c_str(),"1",0);*/
 
 	  			//attributs
 				WIN32_FILE_ATTRIBUTE_DATA InfoFichier;
@@ -2925,6 +3023,22 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
 			if(LOWORD(wParam)==IDM_PASTE)
 			{
 		 		string contenu=GetClipboardText();
+		 		/*string contenu="enfant 1	classe enfant 1\n\
+enfant 2	classe enfant 2\n\
+enfant 3	classe enfant 3\n\
+enfant 4	classe enfant 4\n\
+enfant 5	classe enfant 5\n\
+enfant 6	classe enfant 6\n\
+enfant 7	classe enfant 7\n\
+enfant 8	classe enfant 8\n\
+enfant 9	classe enfant 9\n\
+enfant 10	classe enfant 10\n\
+enfant 11	classe enfant 11\n\
+enfant 12	classe enfant 12\n\
+enfant 13	classe enfant 13\n\
+enfant 14	classe enfant 14\n\
+enfant 15	classe enfant 15\n";*/
+
 		 	    if(contenu=="")return 0;
 		 	    int retourDialog=DialogBox(hinstance, "DIALOGCOLLER" , hwnd, (DLGPROC)DialogVerifPlacesProc);
 			    if(retourDialog==IDCANCEL)
@@ -2953,7 +3067,7 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
 				}
 				else
 				{
-			        tabCollerNom.resize(nbLigneColler);//contient tout au début
+			        tabCollerNom.resize(nbLigneColler,"");//contient tout au début
 			        //token=strtok(contenu,"\n");
 			        tabCollerNom[0]=contenu.substr(0, contenu.find('\n'));//string(token);
                     found=contenu.find('\n');
@@ -2965,6 +3079,7 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
 	   				}
 	   				tabCollerClasse.resize(nbLigneColler);
 				}
+
 				found=0;
    				string bufferInter;
    				string str;
@@ -3001,6 +3116,7 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
         			    tabCollerNom[i]=tabCollerNom[i].substr(0,pos);
 					}
 				}
+
     			if(retourDialog==IDC_RADIO1)//le tableau est éffacé
 				{
 			        enfantActi enfantInter;
@@ -3031,11 +3147,26 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
                     }
                     MessageBox(0,strTest.c_str(),to_string(activite.size()).c_str(),0);*/
 
+                    string a("");
+                    for(size_t i=0;i<enfants.size(); i++)
+                    {
+                        a+=enfants[i].nom+"->"+enfants[i].classe+"\n";
+                    }
+                    //MessageBox(0,a.c_str(),0,0);
+
+                    try
+                    {
 					AfficheNouveauTab(hwnd, hListboxNom, hListboxClasse, hstatu, hButtonAdd, hCheckboxCasesVide, hScroll, hComboActi,
                                       hComboV1, hComboV2, hComboV3,
                                       enfants, activite,
-                                      nbLigne, iItemSel,
+                                      nbLigne, iItemSel, iActiEnCour,
                                       pathFileOpen);
+                    }
+                    catch(...)
+                    {
+                       // MessageBox(0,0,0,0);
+                    }
+
 				}
 			    else if(retourDialog==IDC_RADIO2)//le tableau est conservé, ajouté à la suite
 				{
@@ -3061,7 +3192,7 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
 					AfficheNouveauTab(hwnd, hListboxNom, hListboxClasse, hstatu, hButtonAdd, hCheckboxCasesVide, hScroll, hComboActi,
                                       hComboV1, hComboV2, hComboV3,
                                       enfants, activite,
-                                      nbLigne, iItemSel,
+                                      nbLigne, iItemSel, iActiEnCour,
                                       pathFileOpen);
 		 		}
 		 		int tLen=GetWindowTextLength(hWndMain)+2;
@@ -3076,7 +3207,7 @@ Fichiers GroupManage Compatibles 2.2 et + (*.eac)\0*.eac\0";
 	  		    ::isFileSaved=false;
 			}
 
-			///Menu Réviser
+///Menu Réviser
 			if(LOWORD(wParam)==IDM_VERIF_REMPLI)
 			{
 			    DialogBox(hinstance, "DIALOGVERIFREMPLI" , 0, (DLGPROC)DialogVerifRempliProc);
@@ -3304,16 +3435,51 @@ Il y a ";
 	  		    DialogBox(hinstance, "DIALOGVERIFACTI" , hwnd, (DLGPROC)DialogVerifActi);
 			}
 
-			///Menu ?
-			if(LOWORD(wParam)==IDM_ABOUT)
-			{
-		 	    DialogBox(hinstance, "DIALOGABOUT" , hwnd, (DLGPROC)DialogAboutProc);
-		 	    /*MessageBox(hwnd,"Ce programme a été conçut et élaboré par Simon Vareille\npour un usage strictement non-règlementé.\n\
-Cette version peut éventuellement présenter d'occasionnelles et rarissimes erreurs, merci de les signaler.","A-propos de GroupManage...",MB_ICONQUESTION);*/
-			}
+///Menu Propriétés
+            if(LOWORD(wParam)==IDM_SETTINGS_UPDATE)
+            {
+                DialogBox(hinstance, "DIALOGSETTINGSUPDATE" , hwnd, (DLGPROC)DialogSettingsUpdate);
+            }
+
+///Menu ? (Help)
 			if(LOWORD(wParam)==IDM_HELP)
 			{
    			    SendMessage(hwnd,WM_HELP,0,0);
+			}
+
+            if(LOWORD(wParam)==IDM_SEARCHUPDATE)
+            {
+                PROCESS_INFORMATION Process = {0};
+                STARTUPINFO Start = {0};
+                Start.cb = sizeof(STARTUPINFO);
+                Start.lpReserved = NULL;
+                Start.lpReserved2 = NULL;
+                Start.cbReserved2 = 0;
+                Start.lpDesktop = NULL;
+                Start.dwFlags = 0;
+                char path[MAX_PATH];
+                GetModuleFileName(NULL, path, MAX_PATH);
+                std::string directory=path;
+                directory=directory.substr(0, directory.rfind('\\')+1);
+
+                std::string sparam="Update.exe -searchButNotDownload ";
+                std::vector<char> className(100, 0);
+                GetClassName(hwnd, &className[0], 100);
+                sparam+=std::string(className.begin(), className.end());
+                std::vector<char> parameters(sparam.begin(), sparam.end());
+                parameters.push_back('\0');
+
+                std::string sfile=directory+std::string("Update.exe");
+                CreateProcess(sfile.c_str(), &parameters[0], NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, directory.c_str(), &Start, &Process);
+                CloseHandle(Process.hProcess);
+                CloseHandle(Process.hThread);
+            }
+
+			if(LOWORD(wParam)==IDM_ABOUT)
+			{
+		 	    DialogBox(hinstance, "DIALOGABOUT" , hwnd, (DLGPROC)DialogAboutProc);
+		 	    /*MessageBox(hwnd,"Ce programme a été conçut et élaboré par Simon Vareille.\n\
+Cette version peut éventuellement présenter d'occasionnelles et rarissimes erreurs, merci de les signaler.","A-propos de GroupManage...",MB_ICONQUESTION);*/
 			}
  	 		return 0;
 	 	}
@@ -3701,7 +3867,46 @@ Cette version peut éventuellement présenter d'occasionnelles et rarissimes erreu
 		}
 	 	case WM_HELP:
 		{
-	 	    ShellExecute(0,"open","Aide/helpGroupManage.chm",0,0,SW_NORMAL);
+		    int retour;
+
+            //int len=GetCurrentDirectory(0,NULL);
+            /*char *str=new char[len+1];
+            GetCurrentDirectory(len, str);
+            MessageBox(0,path,"Current Directory",0);
+            delete[]str;*/
+
+            char path[MAX_PATH];
+            GetModuleFileName(NULL, path, MAX_PATH);
+            string directory=path;
+            directory=directory.substr(0, directory.rfind('\\')+1);
+            directory+="Aide\\helpGroupManage.chm";
+
+		    if((retour=(int)ShellExecute(0,"open", directory.c_str(),0,NULL,SW_NORMAL))==0)
+            {
+                MessageBox(hwnd,"Mémoire insuffisante.","Erreur lors de l'ouverture de l'aide",MB_ICONERROR);
+                return 1;
+            }
+            if(retour<32)
+            {
+                map<int, string> msgErr;
+                msgErr[ERROR_FILE_NOT_FOUND]="The specified file was not found.";
+                msgErr[ERROR_PATH_NOT_FOUND]="The specified path was not found.";
+                msgErr[ERROR_BAD_FORMAT]="The .exe file is invalid (non-Win32 .exe or error in .exe image).";
+                msgErr[SE_ERR_ACCESSDENIED]="The operating system denied access to the specified file.";
+                msgErr[SE_ERR_ASSOCINCOMPLETE]="The file name association is incomplete or invalid.";
+                msgErr[SE_ERR_DDEBUSY]="The DDE transaction could not be completed\nbecause other DDE transactions were being processed.";
+                msgErr[SE_ERR_DDEFAIL]="The DDE transaction failed.";
+                msgErr[SE_ERR_DDETIMEOUT]="The DDE transaction could not be completed\nbecause the request timed out.";
+                msgErr[SE_ERR_DLLNOTFOUND]="The specified DLL was not found.";
+                msgErr[SE_ERR_FNF]="The specified file was not found.";
+                msgErr[SE_ERR_NOASSOC]="There is no application associated with the\ngiven file name extension. This error will\nalso be returned if you attempt to print a file that is not printable.";
+                msgErr[SE_ERR_OOM]="There was not enough memory to complete the operation.";
+                msgErr[SE_ERR_PNF]="The specified path was not found.";
+                msgErr[SE_ERR_SHARE]="A sharing violation occurred.";
+
+                MessageBox(hwnd, (msgErr.find(retour)!=msgErr.end()) ? msgErr.find(retour)->second.c_str() : "Erreur indéterminée.","Erreur lors de l'ouverture de l'aide",MB_ICONERROR);
+            }
+
 	 	    return 0;
   		}
   		case WM_RBUTTONUP:
@@ -3737,6 +3942,7 @@ Tout travail non enregistré sera sinon perdu.","Travail non enregistré",MB_ICONW
             {
                 int result=MessageBox(hwnd,"Voulez-vous enregistrer votre travail?\n\
 Tout travail non enregistré sera sinon perdu.","Travail non enregistré",MB_ICONWARNING | MB_YESNOCANCEL);
+
 		        if(result==IDYES)
 		        {
 			        SendMessage(hwnd,WM_COMMAND,LOWORD(IDM_SAVE),0);
@@ -3845,7 +4051,7 @@ Tout travail non enregistré sera sinon perdu.","Travail non enregistré",MB_ICONW
 		    return 0;
 		}
     }
-
+    //MessageBox(0,0,0,0);
 	::traitementLance=true;
 	Initialisation(enfants, enfantsAttributed, activite, inferieurA, traitementLance, arretTraitement, hDlgTraitementEnCours);
 
@@ -3915,7 +4121,7 @@ int OuvrirFeuille(HWND hwnd)
     AfficheNouveauTab(hwnd, hListboxNom, hListboxClasse, hstatu, hButtonAdd, hCheckboxCasesVide, hScroll, hComboActi,
                       hComboV1, hComboV2, hComboV3,
                       enfants, activite,
-                      nbLigne, iItemSel,
+                      nbLigne, iItemSel, iActiEnCour,
                       pathFileOpen);
     backUpActivite=1;
     TabCtrl_SetCurSel(hTabs,0);
@@ -3965,7 +4171,7 @@ LRESULT CALLBACK new_subclassed_listbox_proc(HWND hList, UINT msg, WPARAM wParam
 		{
   		    if(HIWORD(wParam)==EN_KILLFOCUS && (HWND)lParam==hEditList)
 	 		{
-    		    DestroyWindow(hEditList);
+    		    //DestroyWindow(hEditList);
 	        }
 	        if(LOWORD(wParam)==IDM_CHANGENAME)
 	        {
@@ -3999,10 +4205,12 @@ LRESULT CALLBACK new_subclassed_listbox_proc(HWND hList, UINT msg, WPARAM wParam
 				ScreenToClient(hList,&pt);
 				int iItem=SendMessage(hList,LB_ITEMFROMPOINT,0,MAKELPARAM(pt.x,pt.y));
 				int iEnfant=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)SendMessage(hList,LB_ITEMFROMPOINT,0,MAKELPARAM(pt.x,pt.y)),0);
+				if(iEnfant<0 || iEnfant>=enfants.size())return 0;
 				enfants[iEnfant].voeux[jourEnCourSaisie].voeu1=-1;
 				enfants[iEnfant].voeux[jourEnCourSaisie].voeu2=-1;
 				enfants[iEnfant].voeux[jourEnCourSaisie].voeu3=-1;
 				int topIndex=SendMessage(hList,LB_GETTOPINDEX,0,0);
+				if((iItem-topIndex)<0 || (iItem-topIndex)>=hComboV1.size())return 0;
 				EnableWindow(hComboV1[iItem-topIndex],false);
 				EnableWindow(hComboV2[iItem-topIndex],false);
 				EnableWindow(hComboV3[iItem-topIndex],false);
@@ -4015,7 +4223,7 @@ LRESULT CALLBACK new_subclassed_listbox_proc(HWND hList, UINT msg, WPARAM wParam
 			    SendMessage(hListboxNom,LB_DELETESTRING,iItem,0);
 			    SendMessage(hListboxClasse,LB_DELETESTRING,iItem,0);
 
-			    int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)-1;
+			    int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0);
 			    SendMessage(hListboxNom,LB_SETTOPINDEX,iItemTop,0);
 			    SendMessage(hListboxClasse,LB_SETTOPINDEX,iItemTop,0);
 
@@ -4281,22 +4489,26 @@ LRESULT CALLBACK new_subclassed_listbox_proc(HWND hList, UINT msg, WPARAM wParam
 			    SendMessage(hListboxNom,LB_DELETESTRING,iItem,0);
 			    SendMessage(hListboxClasse,LB_DELETESTRING,iItem,0);
 
-		        int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)-1;
+		        int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0);
 			    SendMessage(hListboxNom,LB_SETTOPINDEX,iItemTop,0);
 			    SendMessage(hListboxClasse,LB_SETTOPINDEX,iItemTop,0);
+
 
 	 		    if(enfants.size()>0)
 	 		    {
 	    		    enfants.erase(enfants.begin()+iEnfant);
-	    		    for(int i=0;i<enfants.size();i++)
+	    		    for(int i=iEnfant;i<enfants.size();i++)
 	    		    {
 		 		        enfants[i].ref=i;
-		 		        if(SendMessage(hListboxNom,LB_GETITEMDATA,i,0)>=iEnfant)
+					}
+					for(size_t i=0;i<enfants.size();i++)
+                    {
+                        if(SendMessage(hListboxNom,LB_GETITEMDATA,i,0)>=iEnfant)
 		 		        {
                             SendMessage(hListboxNom,LB_SETITEMDATA,i,SendMessage(hListboxNom,LB_GETITEMDATA,i,0)-1);
                             SendMessage(hListboxClasse,LB_SETITEMDATA,i,SendMessage(hListboxClasse,LB_GETITEMDATA,i,0)-1);
                         }
-					}
+                    }
 				}
 
 				if(enfants.size()<nbLigne)
@@ -4321,6 +4533,7 @@ LRESULT CALLBACK new_subclassed_listbox_proc(HWND hList, UINT msg, WPARAM wParam
 					hComboV3.pop_back();
 					EnableWindow(hScroll,false);
 				}
+                //MessageBox(0,0,0,0);
 				ActualiserTabCombo(iItemTop);
 
 				SCROLLINFO infoScroll;
@@ -4362,6 +4575,7 @@ LRESULT CALLBACK new_subclassed_listbox_proc(HWND hList, UINT msg, WPARAM wParam
 
 LRESULT CALLBACK new_subclassed_edit_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    static bool destroyEdit=false;
     switch(msg)
     {
 	    case WM_KEYUP:
@@ -4369,8 +4583,9 @@ LRESULT CALLBACK new_subclassed_edit_proc(HWND hwnd, UINT msg, WPARAM wParam, LP
 	 	    if(wParam==VK_RETURN)
 	 	    {
 	 		    //fLog<<"VK_RETURN"<<endl;
-	 		    ::destroyEdit=true;
+	 		    destroyEdit=true;
 	 		    int iEnfant=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)iItemEdit,0);
+	 		    if(iEnfant<0 || iEnfant>=enfants.size())return 0;
 
 	 		    int lEditbox = GetWindowTextLength(hwnd)+1;
 				char *sEditbox =new char[lEditbox];
@@ -4383,30 +4598,28 @@ Si le nom est vide, l'élève sera supprimé .\n\
 Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCANCEL)==IDOK)
 		            {
 			 		    DestroyWindow(hwnd);
-
-			 		    for(int jour=0;jour<4;jour++)
-					 	{
-				 		    if(enfants.size()>0)
-		 		    		{
-				    		    enfants.erase(enfants.begin()+iEnfant);
-				    		    for(int i=0;i<enfants.size();i++)
-				    		    {
-					 		        enfants[i].ref=i;
-					 		        if(SendMessage(hListboxNom,LB_GETITEMDATA,i,0)>=iEnfant)
-            		 		        {
-                                        SendMessage(hListboxNom,LB_SETITEMDATA,i,SendMessage(hListboxNom,LB_GETITEMDATA,i,0)-1);
-                                        SendMessage(hListboxClasse,LB_SETITEMDATA,i,SendMessage(hListboxClasse,LB_GETITEMDATA,i,0)-1);
-                                    }
-								}
-							}
-						}//fin for
+                        if(enfants.size()>0)
+                        {
+                            enfants.erase(enfants.begin()+iEnfant);
+                            for(int i=0;i<enfants.size();i++)
+                            {
+                                enfants[i].ref=i;
+                                if(SendMessage(hListboxNom,LB_GETITEMDATA,i,0)>=iEnfant)
+                                {
+                                    SendMessage(hListboxNom,LB_SETITEMDATA,i,SendMessage(hListboxNom,LB_GETITEMDATA,i,0)-1);
+                                    SendMessage(hListboxClasse,LB_SETITEMDATA,i,SendMessage(hListboxClasse,LB_GETITEMDATA,i,0)-1);
+                                }
+                            }
+                        }
 
 						SendMessage(hListboxNom,LB_DELETESTRING,iItemEdit,0);
 						SendMessage(hListboxClasse,LB_DELETESTRING,iItemEdit,0);
 
-						int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)-1;
+						int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0);
 			    		SendMessage(hListboxNom,LB_SETTOPINDEX,iItemTop,0);
 			    		SendMessage(hListboxClasse,LB_SETTOPINDEX,iItemTop,0);
+
+			    		iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0);
 
 						if(enfants.size()<nbLigne)
 						{
@@ -4430,6 +4643,7 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 							hComboV3.pop_back();
 							EnableWindow(hScroll,false);
 						}
+
 						ActualiserTabCombo(iItemTop);
 
 						SCROLLINFO infoScroll;
@@ -4449,6 +4663,7 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 						    EnableWindow(hScroll,false);
 						}
 
+
 						//status bar
 						UpdateStatusBar(hstatu, enfants, hWndMain);
 						//fin status bar
@@ -4463,10 +4678,15 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 			  		    SetWindowText(hWndMain,titreFenetre);
 			  		    delete[] titreFenetre;
 			  		    ::isFileSaved=false;
+			  		    AjoutTabStop();
 					}
-					AjoutTabStop();
+					else
+                    {
+                        SetFocus(hwnd);
+                    }
 					return 0;
 				}//fin supprimer éleve
+
 	 		    SendMessage(hListboxEnCours,LB_DELETESTRING,iItemEdit,0);
 
 	 		    SendMessage(hListboxEnCours,LB_INSERTSTRING,iItemEdit,(LPARAM)sEditbox);
@@ -4539,7 +4759,6 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 	 		if(wParam==VK_TAB)
 	 	    {
 		  	    //fLog<<"VK_TAB"<<endl;
-		  	    ::destroyEdit=true;
 		  	    /*LONG lStyle = GetWindowLongPtr(hButtonAdd, GWL_STYLE);
 			    lStyle |= WS_TABSTOP;
 			    SetWindowLongPtr(hButtonAdd, GWL_STYLE, lStyle);
@@ -4556,7 +4775,10 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 		    	 	SetWindowLongPtr(hComboV3[i], GWL_STYLE, lStyle);
 				}*/
 
+				destroyEdit=true;
+
 				int iEnfant=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)iItemEdit,0);
+				if(iEnfant<0 || iEnfant>=enfants.size())return 0;
 
 	 		    int lEditbox = GetWindowTextLength(hwnd)+1;
 				char *sEditbox =new char[lEditbox];
@@ -4586,7 +4808,7 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 						SendMessage(hListboxNom,LB_DELETESTRING,iItemEdit,0);
 						SendMessage(hListboxClasse,LB_DELETESTRING,iItemEdit,0);
 
-						int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)-1;
+						int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0);
 			    		SendMessage(hListboxNom,LB_SETTOPINDEX,iItemTop,0);
 			    		SendMessage(hListboxClasse,LB_SETTOPINDEX,iItemTop,0);
 
@@ -4644,8 +4866,12 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 			  		    SetWindowText(hWndMain,titreFenetre);
 			  		    delete[] titreFenetre;
 			  		    ::isFileSaved=false;
+			  		    AjoutTabStop();
 					}
-					AjoutTabStop();
+					else
+                    {
+                        SetFocus(hwnd);
+                    }
 					return 0;
 				}
 	 		    SendMessage(hListboxEnCours,LB_DELETESTRING,iItemEdit,0);
@@ -4705,10 +4931,9 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 	 	    //fLog<<"WM_KILLFOCUS"<<endl;
 	 	    if(destroyEdit==true)
 	 	    {
-	 		    ::destroyEdit=false;
+	 		    destroyEdit=false;
 	 		    break;
 	 		}
-
 	 	    /*LONG lStyle = GetWindowLongPtr(hButtonAdd, GWL_STYLE);
 		    lStyle |= WS_TABSTOP;
 		    SetWindowLongPtr(hButtonAdd, GWL_STYLE, lStyle);
@@ -4725,6 +4950,7 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 	    	 	SetWindowLongPtr(hComboV3[i], GWL_STYLE, lStyle);
 			}*/
  	 		int iEnfant=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)iItemEdit,0);
+ 	 		if(iEnfant<0 || iEnfant>=enfants.size())return 0;
  		    int lEditbox = GetWindowTextLength(hwnd)+1;
 			char *sEditbox =new char[lEditbox];
  		    GetWindowText(hwnd,sEditbox,lEditbox);
@@ -4754,7 +4980,7 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 					SendMessage(hListboxNom,LB_DELETESTRING,iItemEdit,0);
 					SendMessage(hListboxClasse,LB_DELETESTRING,iItemEdit,0);
 
-					int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0)-1;
+					int iItemTop=SendMessage(hListboxNom,LB_GETTOPINDEX,0,0);
 		    		SendMessage(hListboxNom,LB_SETTOPINDEX,iItemTop,0);
 		    		SendMessage(hListboxClasse,LB_SETTOPINDEX,iItemTop,0);
 
@@ -4813,8 +5039,12 @@ Voulez-vous vraiment supprimer cet élève?","Champ vide",MB_ICONWARNING | MB_OKCA
 		  		    delete[] titreFenetre;
 		  		    ::isFileSaved=false;
 		  		    //fin status Bar
+		  		    AjoutTabStop();
 				}
-				AjoutTabStop();
+				else
+                {
+                    SetFocus(hwnd);
+                }
 				return CallWindowProc(previous_boring_subclassed_edit_proc, hwnd, msg, wParam, lParam);
 			}
  		    SendMessage(hListboxEnCours,LB_DELETESTRING,iItemEdit,0);
@@ -4931,6 +5161,7 @@ LRESULT CALLBACK new_subclassed_comboActiEdit(HWND hwnd, UINT msg, WPARAM wParam
  	 	    ::nouvActi=false;
  	 	    ::editActiActivate=false;
 
+
  	 	    int lEditbox = GetWindowTextLength(hwnd)+1;
  		    if(lEditbox==1)
  		    {
@@ -4938,7 +5169,32 @@ LRESULT CALLBACK new_subclassed_comboActiEdit(HWND hwnd, UINT msg, WPARAM wParam
  			    {
 				    if(activite.size()!=0)
 				    activite.erase(activite.begin()+iActiEnCour);
+                    for(enfantActi &tempEnf : enfants)
+                    {
+                        for(int jour=0;jour<4;jour++)
+                        {
+                            if(tempEnf.voeux[jour].voeu1==iActiEnCour)
+                                tempEnf.voeux[jour].voeu1=-1;
+                            if(tempEnf.voeux[jour].voeu1>iActiEnCour)
+                                tempEnf.voeux[jour].voeu1--;
+
+                            if(tempEnf.voeux[jour].voeu2==iActiEnCour)
+                                tempEnf.voeux[jour].voeu2=-1;
+                            if(tempEnf.voeux[jour].voeu2>iActiEnCour)
+                                tempEnf.voeux[jour].voeu2--;
+
+                            if(tempEnf.voeux[jour].voeu3==iActiEnCour)
+                                tempEnf.voeux[jour].voeu3=-1;
+                            if(tempEnf.voeux[jour].voeu3>iActiEnCour)
+                                tempEnf.voeux[jour].voeu3--;
+                        }
+                    }
+                    if(iActiEnCour>=activite.size())iActiEnCour=activite.size()-1;
 				}
+				else
+                {
+                    SetFocus(hwnd);
+                }
 
 		   	    break;
 			}
@@ -4956,8 +5212,16 @@ LRESULT CALLBACK new_subclassed_comboActiEdit(HWND hwnd, UINT msg, WPARAM wParam
 			if(activite.size()==0)
 			{
 	  		    InfoActivite actiInter;
+	  		    actiInter.classe="";
+			    actiInter.demande=0;
+			    actiInter.jour=0;
+			    actiInter.nom="";
+                actiInter.placesDispo=0;
+                actiInter.placesRestantes=0;
+                actiInter.ref=0;
 	  		    activite.push_back(actiInter);
 			}
+			if(iActiEnCour<0 || iActiEnCour>=activite.size())return 0;
 			activite[iActiEnCour].nom=string(sEditbox);
    				//SendMessage(hComboActi,CB_ADDSTRING,(WPARAM) 0,(LPARAM) sEditbox);
 			//}
@@ -4974,6 +5238,7 @@ LRESULT CALLBACK new_subclassed_comboActiEdit(HWND hwnd, UINT msg, WPARAM wParam
 			    SetFocus(hEditUpDown);
 	 		    break;
 			}
+			break;
            /* switch (wParam)
             {
                 case VK_TAB:
@@ -5179,7 +5444,7 @@ HWND CreateListView (HWND hwndParent,int x=0,int y=0,int width=100,int height=10
 
     GetClientRect (hwndParent, &rcClient);
 
-    // Create the list-view window in report view with label editing enabled.
+    // Create the list-view window in report view.
     HWND hWndListView = CreateWindowEx(0,WC_LISTVIEW, "",WS_VISIBLE | WS_CHILD | LVS_REPORT ,(rcClient.right - rcClient.left)*x/100, (rcClient.bottom - rcClient.top)*y/100,((rcClient.right - rcClient.left)*width/100)-1,(rcClient.bottom - rcClient.top)*height/100,hwndParent,(HMENU)ID_LISTVIEW ,0,NULL);
 
     return (hWndListView);
@@ -5193,7 +5458,7 @@ HWND CreateListView (HWND hwndParent, bool headerClickable)
 
     GetClientRect (hwndParent, &rcClient);
 
-    // Create the list-view window in report view with label editing enabled.
+    // Create the list-view window in report view.
     HWND hWndListView = CreateWindowEx(0,WC_LISTVIEW, "",WS_VISIBLE | WS_CHILD | LVS_REPORT ,0, 0,((rcClient.right - rcClient.left))-1,(rcClient.bottom - rcClient.top),hwndParent,(HMENU)ID_LISTVIEW ,0,NULL);
 
 	if(!headerClickable)
@@ -5209,18 +5474,21 @@ HWND CreateListView (HWND hwndParent, bool headerClickable)
 
 template <class T> void Trier(T& liste, int champ)
 {
-    for(int i=0;i<liste.size()-1;)
-	{
-	    if(stricmp(liste[i].tableau[champ],liste[i+1].tableau[champ])>0)//2 doit être avant 1
-	    {
-	        swap(liste[i],liste[i+1]);
-	        if(i>0)i--;
-		}
-		else if(i<liste.size()-2)
-		{
- 		    i++;
-		}
-	}
+    if(liste.size()-1>0)
+    {
+        for(int i=0;i<(liste.size()-1);)
+        {
+            if(stricmp(liste[i].tableau[champ],liste[i+1].tableau[champ])>0)//element 2 doit être avant 1
+            {
+                swap(liste[i],liste[i+1]);
+                if(i>0)i--;
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
 }
 
 int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
@@ -5352,9 +5620,13 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				/*char a[4];
 				itoa(enfantsAttributed[0].size(),a,10);
 				MessageBox(0,a,"1",0);*/
+				vector<char> strTemp(enfantsAttributed[i].nom.begin(), enfantsAttributed[i].nom.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,compteurItem,0, &strTemp[0]);//const_cast<char*>(buffer.c_str()));
 
-				ListView_SetItemText(hListView,compteurItem,0, const_cast<char*>(enfantsAttributed[i].nom.c_str()));//const_cast<char*>(buffer.c_str()));
-				ListView_SetItemText(hListView,compteurItem,1, const_cast<char*>(enfantsAttributed[i].classe.c_str()));
+				strTemp=vector<char>(enfantsAttributed[i].classe.begin(), enfantsAttributed[i].classe.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,compteurItem,1, &strTemp[0]);
 
 				for(int jour=0;jour<4;jour++)
 				{
@@ -5363,35 +5635,36 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		  			    if(enfantsAttributed[i].voeux[jour].voeu1==-1 && enfantsAttributed[i].voeux[jour].voeu2==-1 && enfantsAttributed[i].voeux[jour].voeu3==-1)
 		  			    {
 		  				    ListView_SetItemText(hListView,compteurItem,2+jour*2, (char*)"Absent");
+                            ListView_SetItemText(hListView,compteurItem,3+jour*2, "-");
 		  				}
 		  				else
 		  				{
 					        ListView_SetItemText(hListView,compteurItem,2+jour*2, (char*)"Pas d'attribution");
+					        ListView_SetItemText(hListView,compteurItem,3+jour*2, "x");
 						}
 					}
 					else
 					{
-			 		    ListView_SetItemText(hListView,compteurItem,2+jour*2, const_cast<char*>(activite[enfantsAttributed[i].affectation[jour]].nom.c_str()));
-					}
-		   			if(enfantsAttributed[i].affectation[jour]==-1)
-				    {
-					    ListView_SetItemText(hListView,compteurItem,3+jour*2, "-");
-					}
-		   			else if(enfantsAttributed[i].affectation[jour]==enfantsAttributed[i].voeux[jour].voeu1)
-					{
-		 	 		    ListView_SetItemText(hListView,compteurItem,3+jour*2, "1");
-					}
-					else if(enfantsAttributed[i].affectation[jour]==enfantsAttributed[i].voeux[jour].voeu2)
-					{
-		 	 		    ListView_SetItemText(hListView,compteurItem,3+jour*2, "2");
-					}
-					else if(enfantsAttributed[i].affectation[jour]==enfantsAttributed[i].voeux[jour].voeu3)
-					{
-		 	 		    ListView_SetItemText(hListView,compteurItem,3+jour*2, "3");
-					}
-					else
-					{
-			 		    ListView_SetItemText(hListView,compteurItem,3+jour*2, "-");
+					    vector<char> strTemp(activite[enfantsAttributed[i].affectation[jour]].nom.begin(), activite[enfantsAttributed[i].affectation[jour]].nom.end());
+                        strTemp.push_back('\0');
+			 		    ListView_SetItemText(hListView,compteurItem,2+jour*2, &strTemp[0]);
+
+                        if(enfantsAttributed[i].affectation[jour]==enfantsAttributed[i].voeux[jour].voeu1)
+                        {
+                            ListView_SetItemText(hListView,compteurItem,3+jour*2, "1");
+                        }
+                        else if(enfantsAttributed[i].affectation[jour]==enfantsAttributed[i].voeux[jour].voeu2)
+                        {
+                            ListView_SetItemText(hListView,compteurItem,3+jour*2, "2");
+                        }
+                        else if(enfantsAttributed[i].affectation[jour]==enfantsAttributed[i].voeux[jour].voeu3)
+                        {
+                            ListView_SetItemText(hListView,compteurItem,3+jour*2, "3");
+                        }
+                        else
+                        {
+                            ListView_SetItemText(hListView,compteurItem,3+jour*2, "-");
+                        }
 					}
 
 					char textLigne[100];
@@ -5522,6 +5795,7 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						FichierS<<"\n";
 					}
 				    FichierS.close();
+				    MessageBox(hDlg, "La sauvegarde brute a réussie !", "Sauvegarde réussie !", MB_ICONINFORMATION);
 				}
 	  		    return TRUE;
 		 	}
@@ -5639,30 +5913,35 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					//Arrangement de sortieElevesParNom
 					Trier(sortieElevesParNom,0);//par nom
 
+
 					//Arrangemet de sortieElevesParClasse
 					Trier(sortieElevesParClasse,1);//par nom
 					Trier(sortieElevesParClasse,0);//par classe
+
 
 					//Arrangement de sortieElevesParActivite
 					Trier(sortieElevesParActivite,3);//par nom
 					Trier(sortieElevesParActivite,2);//par classe
 					Trier(sortieElevesParActivite,1);//par jour
+
 					Trier(sortieElevesParActivite,0);//par activité
+
 
 					for(int i=0;i<sortieElevesParNom.size();i++)
 					{
 		 			    for (int j=0;j<6;j++)
 		 			    {
-					        FichierS<<((strcmp(sortieElevesParNom[i].tableau[j].c_str(),"")!=0) ? sortieElevesParNom[i].tableau[j] : "-")<<"\t";
+					        FichierS<<((sortieElevesParNom[i].tableau[j].compare("")!=0) ? sortieElevesParNom[i].tableau[j] : "-")<<"\t";
 						}
 						FichierS<<"\t\t\t";
 						for (int j=0;j<6;j++)
 		 			    {
-					        FichierS<<((strcmp(sortieElevesParClasse[i].tableau[j].c_str(),"")!=0) ? sortieElevesParClasse[i].tableau[j] : "-")<<"\t";
+					        FichierS<<((sortieElevesParClasse[i].tableau[j].compare("")!=0) ? sortieElevesParClasse[i].tableau[j] : "-")<<"\t";
 						}
 						FichierS<<"\n";
 					}
 					FichierS.close();
+
 
 					string cheminFichier=string(pathFile);
 					cheminFichier.replace(cheminFichier.size()-4,0," par activité");
@@ -5673,7 +5952,9 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	 			   	    VoirErreur(GetLastError(), (char*)"Erreur lors de l'écriture dans le fichier");
 				  	    return false;
 					}
+
 					FichierS<<"Activité\tJour\tClasse\tNom, Prénom\n";
+
 
 					for(int i=0;i<sortieElevesParActivite.size();i++)
 					{
@@ -5684,7 +5965,9 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						FichierS<<"\n";
 					}
 
+
 					FichierS.close();
+					MessageBox(hDlg, "La sauvegarde formatée a réussie !", "Sauvegarde réussie !", MB_ICONINFORMATION);
 				}
 			    return TRUE;
 			}
@@ -5699,6 +5982,14 @@ BOOL APIENTRY DialogSortieProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
         		return TRUE;
 			}
 	 	}
+	 	case WM_SIZE:
+        {
+            int width=LOWORD(lParam);
+            int height=HIWORD(lParam);
+
+            SetWindowPos(hListView, NULL, 0 , 0, width, height, SWP_NOMOVE | SWP_NOZORDER );
+            return 0;
+        }
 	 	default :
 		{
   		    return FALSE;
@@ -5838,18 +6129,25 @@ BOOL APIENTRY DialogBadaffectProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 				{
 	 			    //strcpy(nom,enfantsAttributed[i].nom.c_str());
 					//strcpy(classe,enfantsAttributed[i].classe.c_str());
-					ListView_SetItemText(hListViewBA,compteurItem,0, const_cast<char*>(enfantsAttributed[i].nom.c_str()));
-					ListView_SetItemText(hListViewGA,compteurItem,0, const_cast<char*>(enfantsAttributed[i].nom.c_str()));
-					ListView_SetItemText(hListViewBA,compteurItem,1, const_cast<char*>(enfantsAttributed[i].classe.c_str()));
-					ListView_SetItemText(hListViewGA,compteurItem,1, const_cast<char*>(enfantsAttributed[i].classe.c_str()));
+					vector<char> strTemp(enfantsAttributed[i].nom.begin(), enfantsAttributed[i].nom.end());
+                    strTemp.push_back('\0');
+					ListView_SetItemText(hListViewBA,compteurItem,0, &strTemp[0]);
+					ListView_SetItemText(hListViewGA,compteurItem,0, &strTemp[0]);
+
+					strTemp=vector<char>(enfantsAttributed[i].classe.begin(), enfantsAttributed[i].classe.end());
+                    strTemp.push_back('\0');
+					ListView_SetItemText(hListViewBA,compteurItem,1, &strTemp[0]);
+					ListView_SetItemText(hListViewGA,compteurItem,1, &strTemp[0]);
 					string points;
 					string chiffre=to_string(enfantsAttributed[i].point);
 					points=chiffre;
 					points+="/";
 					chiffre=to_string(enfantsAttributed[i].denominateur);
 					points+=chiffre;
-					ListView_SetItemText(hListViewBA,compteurItem,2, const_cast<char*>(points.c_str()));
-					ListView_SetItemText(hListViewGA,compteurItem,2, const_cast<char*>(points.c_str()));
+					strTemp=vector<char>(points.begin(), points.end());
+                    strTemp.push_back('\0');
+					ListView_SetItemText(hListViewBA,compteurItem,2, &strTemp[0]);
+					ListView_SetItemText(hListViewGA,compteurItem,2, &strTemp[0]);
 
 					if(enfantsAttributed[i].nom[0]!='\0')break;
 				}
@@ -6015,13 +6313,14 @@ int CALLBACK ComparePointFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 //dialog des vérification de voeu
 BOOL APIENTRY DialogVerifRempliProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-
+    static HWND hListView;
     switch (uMsg)
     {
         case WM_INITDIALOG:
       	{
 		    hListView=CreateListView (hDlg, false);
 
+		    //création des colones
 		    LVCOLUMN lvc;
     		int iCol=0;
     		lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT ;
@@ -6064,7 +6363,7 @@ BOOL APIENTRY DialogVerifRempliProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			lvI.iItem  = 0;
 			lvI.lParam=0;
 			int nbItem=0;
-			bool voeuNonRempli=false;
+			bool erreurProbable=false;
 
 			for(int jour=0;jour<4;jour++)
 			{
@@ -6080,43 +6379,52 @@ BOOL APIENTRY DialogVerifRempliProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 	    		if(nbEnfantJour==0)continue;
  			    for(int i=0;i<enfants.size();i++)
  			    {
+ 			        erreurProbable=false;
  				    lvI.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
  				    if(enfants[i].voeux[jour].voeu1==-1)
  				    {
-	  				    voeuNonRempli=true;
+	  				    erreurProbable=true;
 		 			}
-		 			if(enfants[i].voeux[jour].voeu2==-1)
+		 			if(enfants[i].voeux[jour].voeu2==-1 && enfants[i].voeux[jour].voeu3!=-1)
  				    {
-	  				    voeuNonRempli=true;
-		 			}
-		 			if(enfants[i].voeux[jour].voeu3==-1)
- 				    {
-	  				    voeuNonRempli=true;
+	  				    erreurProbable=true;
 		 			}
 
-					if(voeuNonRempli==true)
+					if(erreurProbable==true)
 					{
 			 			ListView_InsertItem(hListView, &lvI);
 
-						ListView_SetItemText(hListView,lvI.iItem,0,const_cast<char*>(enfants[i].nom.c_str()));
-						ListView_SetItemText(hListView,lvI.iItem,1, const_cast<char*>(enfants[i].classe.c_str()));
+			 			vector<char> strTemp(enfants[i].nom.begin(), enfants[i].nom.end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,0, &strTemp[0]);
+
+						strTemp=vector<char>(enfants[i].classe.begin(), enfants[i].classe.end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,1, &strTemp[0]);
 
 						string nmJour[4]={"lundi","mardi","jeudi","vendredi"};
-						ListView_SetItemText(hListView,lvI.iItem,2, const_cast<char*>(nmJour[jour].c_str()));
+						strTemp=vector<char>(nmJour[jour].begin(), nmJour[jour].end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,2, &strTemp[0]);
 
-
-						ListView_SetItemText(hListView,lvI.iItem,3, (enfants[i].voeux[jour].voeu1!=-1) ? const_cast<char*>(activite[enfants[i].voeux[jour].voeu1].nom.c_str()) : (char*)"Pas de choix");
-						ListView_SetItemText(hListView,lvI.iItem,4, (enfants[i].voeux[jour].voeu2!=-1) ? const_cast<char*>(activite[enfants[i].voeux[jour].voeu2].nom.c_str()) : (char*)"Pas de choix");
-						ListView_SetItemText(hListView,lvI.iItem,5, (enfants[i].voeux[jour].voeu3!=-1) ? const_cast<char*>(activite[enfants[i].voeux[jour].voeu3].nom.c_str()) : (char*)"Pas de choix");
+                        strTemp=vector<char>(activite[enfants[i].voeux[jour].voeu1].nom.begin(), activite[enfants[i].voeux[jour].voeu1].nom.end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,3, (enfants[i].voeux[jour].voeu1!=-1) ? &strTemp[0] : (char*)"Pas de choix");
+						strTemp=vector<char>(activite[enfants[i].voeux[jour].voeu2].nom.begin(), activite[enfants[i].voeux[jour].voeu2].nom.end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,4, (enfants[i].voeux[jour].voeu2!=-1) ? &strTemp[0] : (char*)"Pas de choix");
+						strTemp=vector<char>(activite[enfants[i].voeux[jour].voeu3].nom.begin(), activite[enfants[i].voeux[jour].voeu3].nom.end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,5, (enfants[i].voeux[jour].voeu3!=-1) ? &strTemp[0] : (char*)"Pas de choix");
 
 						string ligne=to_string(i+1);
-						ListView_SetItemText(hListView,lvI.iItem,6,const_cast<char*>(ligne.c_str()));
+						strTemp=vector<char>(ligne.begin(), ligne.end());
+                        strTemp.push_back('\0');
+						ListView_SetItemText(hListView,lvI.iItem,6, &strTemp[0]);
 
 	  				    lvI.iItem++;
 		        		lvI.lParam++;
 		        		lvI.iSubItem=0;
-
-		        		voeuNonRempli=false;
 					}
 				}
 			}
@@ -6474,6 +6782,7 @@ BOOL APIENTRY DialogSelectClasseProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 	 		    hCheckBoxClasses.push_back(CreateWindowEx(0,"button", nomClasses[i].c_str(), WS_CHILD | WS_TABSTOP |WS_VISIBLE | BS_AUTOCHECKBOX ,25+100*(i%4),70+30*(i/4),100,22,hDlg,(HMENU)ID_CHECKBOX,0,NULL));
 			}
 			int nbClasseSelected=0;
+            if(iActiEnCour<0 || iActiEnCour>=activite.size()){EndDialog(hDlg,IDCANCEL);return 0;}
 			for(int i=0;i<nomClasses.size();i++)
 		    {
       		    if(activite[iActiEnCour].classe.find(nomClasses[i]+"\t")!=std::string::npos)
@@ -6528,7 +6837,7 @@ BOOL APIENTRY DialogSelectClasseProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 			    }
 			    if(IsDlgButtonChecked(hDlg, IDC_RADIO1) == BST_CHECKED)
 			    {
-
+                    if(iActiEnCour<0 || iActiEnCour>=activite.size()){EndDialog(hDlg,IDCANCEL);return 0;}
 				    activite[iActiEnCour].classe="";
 				    for(int i=0;i<nomClasses.size();i++)
 		    		{
@@ -6539,6 +6848,7 @@ BOOL APIENTRY DialogSelectClasseProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lP
 				}
 				else
 				{
+				    if(iActiEnCour<0 || iActiEnCour>=activite.size()){EndDialog(hDlg,IDCANCEL);return 0;}
 		 		    activite[iActiEnCour].classe="";
 				 	for(int i=0;i<hCheckBoxClasses.size();i++)
 		    		{
@@ -6663,7 +6973,7 @@ BOOL APIENTRY DialogTraitementEnCours(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM l
 }
 BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-
+    static HWND hListView;
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -6709,15 +7019,23 @@ BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
    				lvI.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
 				ListView_InsertItem(hListView, &lvI);
 
-				ListView_SetItemText(hListView,lvI.iItem,0,const_cast<char*>(activite[i].nom.c_str()));
+				vector<char> strTemp(activite[i].nom.begin(), activite[i].nom.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,lvI.iItem,0,&strTemp[0]);
 
 				string nbPlaces=to_string(activite[i].placesDispo);
-				ListView_SetItemText(hListView,lvI.iItem,1,const_cast<char*>(nbPlaces.c_str()));
+				strTemp=vector<char>(nbPlaces.begin(), nbPlaces.end());
+                strTemp.push_back('\0');
+				ListView_SetItemText(hListView,lvI.iItem,1,&strTemp[0]);
 
 				string nmJour[4]={"lundi","mardi","jeudi","vendredi"};
-				ListView_SetItemText(hListView,lvI.iItem,2, const_cast<char*>(nmJour[activite[i].jour].c_str()));
+				strTemp=vector<char>(nmJour[activite[i].jour].begin(), nmJour[activite[i].jour].end());
+                strTemp.push_back('\0');
+				ListView_SetItemText(hListView,lvI.iItem,2, &strTemp[0]);
 
-				ListView_SetItemText(hListView,lvI.iItem,3,const_cast<char*>(activite[i].classe.c_str()));
+				strTemp=vector<char>(activite[i].classe.begin(), activite[i].classe.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,lvI.iItem,3,&strTemp[0]);
 
 			    lvI.iItem++;
         		lvI.lParam++;
@@ -6741,7 +7059,7 @@ BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	  			    ::iItemModifActi=nmlv->iItem;
 	  			    if(iItemModifActi==-1)
 	  			    {
-				  	    iItemModifActi=activite.size()-1;
+				  	    ::iItemModifActi=activite.size()-1;
 				  	}
 	  			}
 	  			else
@@ -6753,7 +7071,7 @@ BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	  			    ::iItemModifActi=SendMessage(hListView,LVM_HITTEST,0,(LPARAM)&infoItem);
 	  			    if(iItemModifActi==-1)
 	  			    {
-				  	    iItemModifActi=activite.size()-1;
+				  	    ::iItemModifActi=activite.size()-1;
 				  	}
 				}
 				//fLog<<"Après if(nmlv->iItem!=-1)"<<endl;
@@ -6765,6 +7083,7 @@ BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				int iActiEnCourTemp=iActiEnCour;
 				::iActiEnCour=iItemModifActi;
 
+				if(iItemModifActi<0 || iItemModifActi>=activite.size()){EndDialog(hDlg,IDCANCEL);return 0;}
 				string classe=activite[iItemModifActi].classe;
 
 				if(DialogBox(hinstance, "DIALOGMODIFACTI" , hDlg, (DLGPROC)DialogModifActi)==IDCANCEL)
@@ -6773,12 +7092,23 @@ BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 				::iActiEnCour=iActiEnCourTemp;
 
-				ListView_SetItemText(hListView,iItemModifActi,0,const_cast<char*>(activite[iItemModifActi].nom.c_str()));
+                vector<char> strTemp(activite[iItemModifActi].nom.begin(), activite[iItemModifActi].nom.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,iItemModifActi,0,&strTemp[0]);
+
 				string nbPlaces=to_string(activite[iItemModifActi].placesDispo);
-				ListView_SetItemText(hListView,iItemModifActi,1,const_cast<char*>(nbPlaces.c_str()));
+				strTemp=vector<char>(nbPlaces.begin(), nbPlaces.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,iItemModifActi,1,&strTemp[0]);
+
 				string nmJour[4]={"lundi","mardi","jeudi","vendredi"};
-				ListView_SetItemText(hListView,iItemModifActi,2, const_cast<char*>(nmJour[activite[iItemModifActi].jour].c_str()));
-				ListView_SetItemText(hListView,iItemModifActi,3,const_cast<char*>(activite[iItemModifActi].classe.c_str()));
+				strTemp=vector<char>(nmJour[activite[iItemModifActi].jour].begin(), nmJour[activite[iItemModifActi].jour].end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,iItemModifActi,2, &strTemp[0]);
+
+				strTemp=vector<char>(activite[iItemModifActi].classe.begin(), activite[iItemModifActi].classe.end());
+				strTemp.push_back('\0');
+				ListView_SetItemText(hListView,iItemModifActi,3, &strTemp[0]);
 
 			}
 			//delete nmlv
@@ -6801,7 +7131,7 @@ BOOL APIENTRY DialogVerifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 BOOL APIENTRY DialogModifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-
+    static string sClassesActiviteTemp;
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -6812,6 +7142,7 @@ BOOL APIENTRY DialogModifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			{
 	  		    return true;
 			}
+			if(iItemModifActi<0 || iItemModifActi>=activite.size()){EndDialog(hDlg,IDCANCEL);return 0;}
 			SetDlgItemText(hDlg,IDE_EDITMODIFNAME,activite[iItemModifActi].nom.c_str());
 			SetDlgItemInt(hDlg,IDE_EDITMODIFPLACES,activite[iItemModifActi].placesDispo,false);
 
@@ -6822,7 +7153,9 @@ BOOL APIENTRY DialogModifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 		    string jour[4]={"Lundi","Mardi","Jeudi","Vendredi"};
 			ComboBox_SelectString(GetDlgItem(hDlg,IDE_COMBOBOX),-1,jour[activite[iItemModifActi].jour].c_str());
+			sClassesActiviteTemp=activite[iItemModifActi].classe;
 	 	    //iItemModifActi;
+
 	 	    return true;
 		}
 		case WM_COMMAND:
@@ -6841,6 +7174,7 @@ BOOL APIENTRY DialogModifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		  		}
 		  		char nom[100];
 			    GetDlgItemText(hDlg,IDE_EDITMODIFNAME,nom,99);
+			    if(iItemModifActi<0 || iItemModifActi>=activite.size()){EndDialog(hDlg,IDCANCEL);return 0;}
 			    activite[iItemModifActi].nom=string(nom);
 			    activite[iItemModifActi].placesDispo=GetDlgItemInt(hDlg,IDE_EDITMODIFPLACES,NULL,false);
 
@@ -6861,7 +7195,12 @@ BOOL APIENTRY DialogModifActi(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	 		    EndDialog(hDlg,IDOK);
         		return TRUE;
 			}
-
+	 	    if (LOWORD(wParam)==IDCANCEL)
+	 		{
+	 		    activite[iItemModifActi].classe=sClassesActiviteTemp;
+	 		    EndDialog(hDlg,IDCANCEL);
+        		return TRUE;
+			}
 			return 0;
 		}
 		default :
@@ -6881,7 +7220,13 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
     {
         case WM_INITDIALOG:
       	{
-      	    ifstream file("readme.txt");
+      	    char path[MAX_PATH];
+            GetModuleFileName(NULL, path, MAX_PATH);
+            string directory=path;
+            directory=directory.substr(0, directory.rfind('\\')+1);
+            string sfile=directory+string("readme.txt");
+
+      	    ifstream file(sfile.c_str());
       	    string content;
       	    string line;
             if(!file)
@@ -6894,11 +7239,12 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             {
                 content+=line+"\r\n";
             }
+            sfile=directory+string("resources\\Images\\logo.bmp");
 
-      	    hLogo=(HBITMAP)LoadImage(NULL,"resources/Images/logo.bmp",IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
+      	    hLogo=(HBITMAP)LoadImage(NULL,sfile.c_str(),IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
       	    if(hLogo==NULL)
             {
-                char erreurTitre[]="Erreur de lecture du fichier resources/Images/logo.bmp";
+                char erreurTitre[]="Erreur de lecture du fichier resources\\Images\\logo.bmp";
                 VoirErreur(GetLastError(),erreurTitre);
             }
             hTabsAbout = CreateWindowEx(0 , WC_TABCONTROL, "", WS_CHILD | WS_VISIBLE, 20, 280, 560, 320, hDlg, NULL, hinstance, NULL);
@@ -6960,9 +7306,14 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             LPNMHDR pnmhdr = (LPNMHDR)lParam  ;
 			if(pnmhdr->code == TCN_SELCHANGE)
 			{
+			    char path[MAX_PATH];
+                GetModuleFileName(NULL, path, MAX_PATH);
+                string directory=path;
+                directory=directory.substr(0, directory.rfind('\\')+1);
 				if(TabCtrl_GetCurSel(hTabsAbout) == 0)
 				{
-                    ifstream file("readme.txt");
+				    string sfile=directory+string("readme.txt");
+                    ifstream file(sfile.c_str());
                     string content;
                     string line;
                     if(!file)
@@ -6980,12 +7331,13 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 				if(TabCtrl_GetCurSel(hTabsAbout) == 1)
 				{
-                    ifstream file("resources/Files/Informations.txt");
+				    string sfile=directory+string("resources\\Files\\Informations.txt");
+                    ifstream file(sfile.c_str());
                     string content;
                     string line;
                     if(!file)
                     {
-                        char erreurTitre[]="Erreur de lecture du fichier resources/Files/Informations.txt";
+                        char erreurTitre[]="Erreur de lecture du fichier resources\\Files\\Informations.txt";
                         VoirErreur(GetLastError(),erreurTitre);
                         content="Informations";
                     }
@@ -6998,12 +7350,13 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 				if(TabCtrl_GetCurSel(hTabsAbout) == 2)
 				{
-                    ifstream file("resources/Files/Remerciements.txt");
+				    string sfile=directory+string("resources\\Files\\Remerciements.txt");
+                    ifstream file(sfile.c_str());
                     string content;
                     string line;
                     if(!file)
                     {
-                        char erreurTitre[]="Erreur de lecture du fichier resources/Files/Remerciements.txt";
+                        char erreurTitre[]="Erreur de lecture du fichier resources\\Files\\Remerciements.txt";
                         VoirErreur(GetLastError(),erreurTitre);
                         content="Remerciements";
                     }
@@ -7016,7 +7369,8 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 				if(TabCtrl_GetCurSel(hTabsAbout) == 3)
 				{
-                    ifstream file("LICENCE.txt");
+				    string sfile=directory+string("LICENCE.txt");
+                    ifstream file(sfile.c_str());
                     string content;
                     string line;
                     if(!file)
@@ -7034,12 +7388,13 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				}
 				if(TabCtrl_GetCurSel(hTabsAbout) == 4)
 				{
-                    ifstream file("resources/Files/IMPORTANT.txt");
+				    string sfile=directory+string("resources\\Files\\IMPORTANT.txt");
+                    ifstream file(sfile.c_str());
                     string content;
                     string line;
                     if(!file)
                     {
-                        char erreurTitre[]="Erreur de lecture du fichier resources/Files/IMPORTANT.txt";
+                        char erreurTitre[]="Erreur de lecture du fichier resources\\Files\\IMPORTANT.txt";
                         VoirErreur(GetLastError(),erreurTitre);
                         content="Important";
                     }
@@ -7066,6 +7421,241 @@ BOOL APIENTRY DialogAboutProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
          return FALSE;
     }
 }
+
+BOOL APIENTRY DialogSettingsUpdate(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+      	{
+            HKEY key;
+            DWORD kSize=MAX_PATH;
+            char mem[MAX_PATH] = "";
+            RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\GroupManage.exe", 0, KEY_READ, &key);
+
+            if(RegQueryValueEx(key, "LunchUpdate", NULL, NULL, (BYTE*)mem, &kSize)==ERROR_SUCCESS)
+            {
+                //MessageBox(0,mem,0,0);
+                CheckDlgButton(hDlg, ID_SEARCHUPDATE, BST_CHECKED);
+
+                CheckDlgButton(hDlg, IDC_RADIO1, BST_UNCHECKED);
+                CheckDlgButton(hDlg, IDC_RADIO2, BST_CHECKED);
+
+                std::string sparam=mem;
+                if(sparam.compare("-searchButNotDownload_Notify")==0)
+                {
+                    CheckDlgButton(hDlg, ID_INSTALLUPDATE, BST_UNCHECKED);//Non coché
+                }
+                else
+                {
+                    CheckDlgButton(hDlg, ID_INSTALLUPDATE, BST_CHECKED);//Coché
+                }
+            }
+            else
+            {
+                CheckDlgButton(hDlg, IDC_RADIO2, BST_UNCHECKED);
+
+                RegCloseKey(key);
+                RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_READ, &key);
+
+                if(RegQueryValueEx(key,"GroupManageUpdate", NULL, NULL, (BYTE*)mem, &kSize)==ERROR_SUCCESS)
+                {
+                    CheckDlgButton(hDlg, ID_SEARCHUPDATE, BST_CHECKED);
+                    CheckDlgButton(hDlg, IDC_RADIO1, BST_CHECKED);
+
+                    std::string sparam=std::string(mem);
+                    if(sparam.substr(sparam.size()-28, 28).compare("-searchButNotDownload_Notify")==0)
+                    {
+                        CheckDlgButton(hDlg, ID_INSTALLUPDATE, BST_UNCHECKED);//Non coché
+                    }
+                    else
+                    {
+                        CheckDlgButton(hDlg, ID_INSTALLUPDATE, BST_CHECKED);//Coché
+                    }
+
+                }
+                else
+                {
+                    CheckDlgButton(hDlg, ID_SEARCHUPDATE, BST_UNCHECKED);
+                    CheckDlgButton(hDlg, IDC_RADIO1, BST_UNCHECKED);
+                    CheckDlgButton(hDlg, ID_INSTALLUPDATE, BST_UNCHECKED);//Non coché
+                }
+            }
+
+            if(IsDlgButtonChecked(hDlg, ID_SEARCHUPDATE)==BST_UNCHECKED)
+            {
+                SetDlgItemText(hDlg, IDT_RESULTCHOICE, "Les mises à jour ne seront jamais effectuées.");
+                EnableWindow(GetDlgItem(hDlg, IDC_RADIO1), false);
+                EnableWindow(GetDlgItem(hDlg, IDC_RADIO2), false);
+                EnableWindow(GetDlgItem(hDlg, ID_INSTALLUPDATE), false);
+            }
+            else
+            {
+                std::string text="Les mises à jour seront effectuées ";
+                if(IsDlgButtonChecked(hDlg, IDC_RADIO1)==BST_CHECKED)
+                {
+                    text+="au démarrage de l'ordinateur, ";
+                }
+                else
+                {
+                    text+="au lancement de GroupManage, ";
+                }
+
+                if(IsDlgButtonChecked(hDlg, ID_INSTALLUPDATE)==BST_CHECKED)
+                {
+                    text+="sans en avertir l'utilisateur.";
+                }
+                else
+                {
+                    text+="en avertissant l'utilisateur.";
+                }
+
+                SetDlgItemText(hDlg, IDT_RESULTCHOICE, text.c_str());
+                EnableWindow(GetDlgItem(hDlg, IDC_RADIO1), true);
+                EnableWindow(GetDlgItem(hDlg, IDC_RADIO2), true);
+                EnableWindow(GetDlgItem(hDlg, ID_INSTALLUPDATE), true);
+
+            }
+
+            RegCloseKey(key);
+
+            if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_WRITE, &key)!=ERROR_SUCCESS)
+            {
+                EnableWindow(GetDlgItem(hDlg, ID_SEARCHUPDATE), false);
+                EnableWindow(GetDlgItem(hDlg, IDC_RADIO1), false);
+                EnableWindow(GetDlgItem(hDlg, IDC_RADIO2), false);
+                EnableWindow(GetDlgItem(hDlg, ID_INSTALLUPDATE), false);
+            }
+
+      	    return TRUE;
+        }
+        case WM_CTLCOLORSTATIC:
+		{
+  		    DWORD CtrlID = GetDlgCtrlID((HWND)lParam); //Window Control ID
+		    if (CtrlID == IDT_RESULTCHOICE) //If desired control
+		    {
+		        HDC hdcStatic = (HDC) wParam;
+		        SetBkColor(hdcStatic, COLORREF( GetSysColor( COLOR_3DFACE ) ) );
+		        SetTextColor(hdcStatic, RGB(0,0,255));
+		        //SetBkColor(hdcStatic, RGB(230,230,230));
+		        //SetBkMode(hdcStatic, TRANSPARENT);
+		        return (INT_PTR)GetSysColorBrush( COLOR_3DFACE );
+		    }
+		    return 0;
+		}
+        case WM_COMMAND:
+        {
+            if(LOWORD(wParam)==ID_SEARCHUPDATE || LOWORD(wParam)==IDC_RADIO1 || LOWORD(wParam)==IDC_RADIO2 || ID_INSTALLUPDATE)
+            {
+                if(IsDlgButtonChecked(hDlg, ID_SEARCHUPDATE)==BST_UNCHECKED)
+                {
+                    SetDlgItemText(hDlg, IDT_RESULTCHOICE, "Les mises à jour ne seront jamais effectuées.");
+                    EnableWindow(GetDlgItem(hDlg, IDC_RADIO1), false);
+                    EnableWindow(GetDlgItem(hDlg, IDC_RADIO2), false);
+                    EnableWindow(GetDlgItem(hDlg, ID_INSTALLUPDATE), false);
+                }
+                else
+                {
+                    std::string text="Les mises à jour seront effectuées ";
+                    if(IsDlgButtonChecked(hDlg, IDC_RADIO1)==BST_CHECKED)
+                    {
+                        text+="au démarrage de l'ordinateur, ";
+                    }
+                    else
+                    {
+                        text+="au lancement de GroupManage, ";
+                    }
+
+                    if(IsDlgButtonChecked(hDlg, ID_INSTALLUPDATE)==BST_CHECKED)
+                    {
+                        text+="sans en avertir l'utilisateur.";
+                    }
+                    else
+                    {
+                        text+="en avertissant l'utilisateur.";
+                    }
+
+                    SetDlgItemText(hDlg, IDT_RESULTCHOICE, text.c_str());
+                    EnableWindow(GetDlgItem(hDlg, IDC_RADIO1), true);
+                    EnableWindow(GetDlgItem(hDlg, IDC_RADIO2), true);
+                    EnableWindow(GetDlgItem(hDlg, ID_INSTALLUPDATE), true);
+
+                    if(IsDlgButtonChecked(hDlg, IDC_RADIO1)==BST_UNCHECKED && IsDlgButtonChecked(hDlg, IDC_RADIO2)==BST_UNCHECKED)
+                        CheckDlgButton(hDlg, IDC_RADIO2, BST_CHECKED);
+                }
+            }
+            if (LOWORD(wParam)==IDOK)
+            {
+                if(IsDlgButtonChecked(hDlg, ID_SEARCHUPDATE)==BST_UNCHECKED)
+                {
+                    HKEY key;
+                    DWORD kSize=MAX_PATH;
+                    char mem[MAX_PATH] = "";
+
+                    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\GroupManage.exe", 0, KEY_WRITE, &key);
+                    RegDeleteValue(key, "LunchUpdate");
+                    RegCloseKey(key);
+
+                    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_WRITE, &key);
+                    RegDeleteValue(key, "GroupManageUpdate");
+                    RegCloseKey(key);
+                    //RegCreateKeyEx( HKEY_CLASSES_ROOT, mem, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &key, NULL );
+                    //RegSetValueEx(key, "", 0, REG_SZ, (LPBYTE)pathIconInExe.c_str(), (DWORD)pathIconInExe.size());
+                }
+                else
+                {
+                    if(IsDlgButtonChecked(hDlg, IDC_RADIO1)==BST_CHECKED)
+                    {
+                        std::string data="\"";
+                        char path[MAX_PATH];
+                        GetCurrentDirectory(MAX_PATH, path);
+                        data+=path;
+                        data+="Update.exe\" ";
+
+                        if(IsDlgButtonChecked(hDlg, ID_INSTALLUPDATE)==BST_CHECKED)
+                        {
+                            data+="-update";
+                        }
+                        else
+                        {
+                            data+="-searchButNotDownload_Notify";
+                        }
+                        HKEY key;
+                        RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_WRITE, &key);
+                        RegSetValueEx(key, "GroupManageUpdate", 0, REG_SZ, (LPBYTE) data.c_str(), (DWORD)data.size());
+                    }
+                    else
+                    {
+                        std::string data;
+
+                        if(IsDlgButtonChecked(hDlg, ID_INSTALLUPDATE)==BST_CHECKED)
+                        {
+                            data="-update";
+                        }
+                        else
+                        {
+                            data="-searchButNotDownload_Notify";
+                        }
+                        HKEY key;
+                        RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\GroupManage.exe", 0, KEY_WRITE, &key);
+                        RegSetValueEx(key, "LunchUpdate", 0, REG_SZ, (LPBYTE) data.c_str(), (DWORD)data.size());
+                    }
+
+                }
+                EndDialog(hDlg,IDOK);
+                return TRUE;
+            }
+            if (LOWORD(wParam)==IDCANCEL)
+            {
+                EndDialog(hDlg,IDCANCEL);
+                return TRUE;
+            }
+        }
+		default :
+         return FALSE;
+    }
+}
+
 
 LRESULT APIENTRY WndProcNewEditAbout(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -7106,24 +7696,25 @@ LRESULT APIENTRY WndProcNewEditAbout(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 string GetClipboardText()
 {
-    //char *text;
-    char *textMem;
     string retour;
     if(IsClipboardFormatAvailable(CF_TEXT))
  	{
 	    if(OpenClipboard(NULL))
 	    {
-	        textMem = (char*)GetClipboardData(CF_TEXT);
+	        retour = string((char*)GetClipboardData(CF_TEXT));
 
 	        /* free() devra être utilisé une fois le texte utilisé */
 	        //text = new char[lstrlen(textMem)+1];
 	        //strcpy(text, textMem);
-	    }
 
-	    CloseClipboard();
+	        CloseClipboard();
+	    }
+	    else
+        {
+            VoirErreur(GetLastError(), "Erreur lors de l'ouverture du presse-papier.");
+            return 0;
+        }
     }
-    retour=string(textMem);
-    free(textMem);
     return retour;
 }
 
@@ -7304,7 +7895,6 @@ BOOL CALLBACK EnumChildStartPosProc(HWND hwnd,LPARAM lParam)
 
 bool ActualiserTabCombo(int top)
 {
-
     if(Button_GetCheck(hCheckboxCasesVide)==BST_CHECKED)
     {
 	    for(int i=0;i<hComboV1.size();i++)
@@ -7352,10 +7942,13 @@ bool ActualiserTabCombo(int top)
 		    SendMessage(hComboV2[i],CB_ADDSTRING,(WPARAM) 0,(LPARAM)" ");
 		    SendMessage(hComboV3[i],CB_ADDSTRING,(WPARAM) 0,(LPARAM)" ");
 
+
+
 		    string str;
+		    int itemData=SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0);
 		    for(int j=0;j<activite.size();j++)
 			{
-				str=enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].classe;
+				str=enfants[itemData].classe;
 				if(activite[j].classe.find(str)!=std::string::npos && activite[j].jour==jourEnCourSaisie)
 				{
 				    SendMessage(hComboV1[i],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
@@ -7363,13 +7956,11 @@ bool ActualiserTabCombo(int top)
 				    SendMessage(hComboV3[i],CB_ADDSTRING,(WPARAM) 0,(LPARAM) activite[j].nom.c_str());
 				}
 			}//fin for activite
-
 		    //affichage
-	        SendMessage(hComboV1[i],CB_SELECTSTRING,(WPARAM)-1,(enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].voeux[jourEnCourSaisie].voeu1!=-1) ? (LPARAM)activite[enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].voeux[jourEnCourSaisie].voeu1].nom.c_str() :(LPARAM) " ");
-	        SendMessage(hComboV2[i],CB_SELECTSTRING,(WPARAM)-1,(enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].voeux[jourEnCourSaisie].voeu2!=-1) ? (LPARAM)activite[enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].voeux[jourEnCourSaisie].voeu2].nom.c_str() :(LPARAM) " ");
-			SendMessage(hComboV3[i],CB_SELECTSTRING,(WPARAM)-1,(enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].voeux[jourEnCourSaisie].voeu3!=-1) ? (LPARAM)activite[enfants[SendMessage(hListboxNom,LB_GETITEMDATA,(WPARAM)top+i,0)].voeux[jourEnCourSaisie].voeu3].nom.c_str() :(LPARAM) " ");
+	        SendMessage(hComboV1[i],CB_SELECTSTRING,(WPARAM)-1,(enfants[itemData].voeux[jourEnCourSaisie].voeu1!=-1) ? (LPARAM)activite[enfants[itemData].voeux[jourEnCourSaisie].voeu1].nom.c_str() :(LPARAM) " ");
+	        SendMessage(hComboV2[i],CB_SELECTSTRING,(WPARAM)-1,(enfants[itemData].voeux[jourEnCourSaisie].voeu2!=-1) ? (LPARAM)activite[enfants[itemData].voeux[jourEnCourSaisie].voeu2].nom.c_str() :(LPARAM) " ");
+			SendMessage(hComboV3[i],CB_SELECTSTRING,(WPARAM)-1,(enfants[itemData].voeux[jourEnCourSaisie].voeu3!=-1) ? (LPARAM)activite[enfants[itemData].voeux[jourEnCourSaisie].voeu3].nom.c_str() :(LPARAM) " ");
 		}
 	}
-
     return 0;
 }

@@ -1,0 +1,32 @@
+----------------Informations concernant le développement de GroupManage----------------
+
+----Développeur :
+Simon Vareille
+
+----Langage utilisé :
+C/C++
+
+----Plateforme utilisée :
+-Windows
+
+---Bibliothèques utilisées:
+-STL
+-API Windows
+-boost.asio
+-OpenSSL
+-boost.bind
+-LZMA
+
+----Composants utilisés :
+-HTML Help Workshop
+-Inno Setup
+
+----IDE utilisés :
+-Dev-C++
+-Code::Blocks
+
+----Contact :
+-groupmanage.assistance@gmail.com
+-https://github.com/GroupManage/
+-https://GroupManage.github.io/
+

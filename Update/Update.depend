@@ -1,0 +1,279 @@
+# depslib dependency file v1.0
+1477664458 source:k:\personnel\c++\gestion des groupes\groupmanage.github.io\update.cpp
+	<fstream>
+	<iostream>
+	<string>
+	<vector>
+	<SFML/Network.hpp>
+
+1477837252 source:k:\personnel\c++\gestion des groupes\groupmanage.github.io\curl.cpp
+	<stdio.h>
+	<curl/curl.h>
+
+1477753452 source:c:\curlpp\curlpp-0.7.3\examples\example00.cpp
+	<curlpp/cURLpp.hpp>
+	<curlpp/Easy.hpp>
+	<curlpp/Options.hpp>
+
+1484677888 source:g:\personnel\c++\gestion des groupes\groupmanage.github.io\update.cpp
+	<cstdlib>
+	<iostream>
+	<fstream>
+	<locale>
+	<thread>
+	<sstream>
+	<sstream>
+	<string>
+	<tuple>
+	<atomic>
+	<condition_variable>
+	<mutex>
+	<boost/bind.hpp>
+	<boost/asio.hpp>
+	<boost/asio/ssl.hpp>
+	<boost/algorithm/string.hpp>
+	<windows.h>
+	<Windowsx.h>
+	<commctrl.h>
+	<Psapi.h>
+	<Shellapi.h>
+	<fcntl.h>
+	"resource.h"
+	<boost/filesystem.hpp>
+	<C/Util/7z/7zlib/7zlib.h>
+	"HTTPSclient.h"
+	"EmpreinteSHA256.h"
+
+1484677866 source:g:\personnel\c++\gestion des groupes\groupmanage.github.io\httpsclient.cpp
+	"HTTPSclient.h"
+
+1484677860 g:\personnel\c++\gestion des groupes\groupmanage.github.io\httpsclient.h
+	<iostream>
+	<istream>
+	<ostream>
+	<string>
+	<vector>
+	<cstdlib>
+	<fstream>
+	<algorithm>
+	<boost/bind.hpp>
+	<boost/asio.hpp>
+	<boost/asio/ssl.hpp>
+	<windows.h>
+	<boost/filesystem.hpp>
+
+1478958832 source:g:\personnel\c++\gestion des groupes\groupmanage.github.io\empreintesha256.cpp
+
+1484677848 g:\personnel\c++\gestion des groupes\groupmanage.github.io\empreintesha256.h
+	<iostream>
+	<sstream>
+	<string>
+	<iomanip>
+	<openssl/sha.h>
+
+1443443733 source:c:\lzma\cpp\7zip\compress\lzma2decoder.cpp
+	"StdAfx.h"
+	"../../../C/Alloc.h"
+	"../Common/StreamUtils.h"
+	"Lzma2Decoder.h"
+
+1384324549 c:\lzma\cpp\7zip\compress\stdafx.h
+	"../../Common/Common.h"
+
+1384236229 c:\lzma\cpp\common\common.h
+	"../../C/Compiler.h"
+	"MyWindows.h"
+	"NewHandler.h"
+
+1438512743 c:\lzma\c\compiler.h
+
+1403418950 c:\lzma\cpp\common\mywindows.h
+	<windows.h>
+	<stddef.h>
+	<string.h>
+	"MyGuidDef.h"
+
+1402576154 c:\lzma\cpp\common\myguiddef.h
+	"MyTypes.h"
+
+1423235724 c:\lzma\cpp\common\mytypes.h
+	"../../C/7zTypes.h"
+
+1384235681 c:\lzma\c\7ztypes.h
+	<stddef.h>
+
+1438429278 c:\lzma\cpp\common\newhandler.h
+	<stddef.h>
+
+1424530568 c:\lzma\c\alloc.h
+	"7zTypes.h"
+
+1359400529 c:\lzma\cpp\7zip\common\streamutils.h
+	"../IStream.h"
+
+1438524209 c:\lzma\cpp\7zip\istream.h
+	"../Common/MyTypes.h"
+	"../Common/MyWindows.h"
+	"IDecl.h"
+
+1425640416 c:\lzma\cpp\7zip\idecl.h
+	"../Common/MyUnknown.h"
+
+1438436493 c:\lzma\cpp\common\myunknown.h
+	"MyWindows.h"
+	<basetyps.h>
+	<unknwn.h>
+	"MyWindows.h"
+
+1420734518 c:\lzma\cpp\7zip\compress\lzma2decoder.h
+	"../../../C/Lzma2Dec.h"
+	"../../Common/MyCom.h"
+	"../ICoder.h"
+
+1431503965 c:\lzma\c\lzma2dec.h
+	"LzmaDec.h"
+
+1358499600 c:\lzma\c\lzmadec.h
+	"7zTypes.h"
+
+1427624270 c:\lzma\cpp\common\mycom.h
+	"MyWindows.h"
+	"NewHandler.h"
+
+1425811062 c:\lzma\cpp\7zip\icoder.h
+	"IStream.h"
+
+1443443733 source:c:\lzma\cpp\7zip\compress\lzmadecoder.cpp
+	"StdAfx.h"
+	"../../../C/Alloc.h"
+	"../Common/StreamUtils.h"
+	"LzmaDecoder.h"
+
+1420734518 c:\lzma\cpp\7zip\compress\lzmadecoder.h
+	"../../../C/LzmaDec.h"
+	"../../Common/MyCom.h"
+	"../ICoder.h"
+
+1463384667 source:c:\lzma\c\util\7z\7zmain.c
+	"Precomp.h"
+	<stdio.h>
+	<string.h>
+	"../../7z.h"
+	"../../7zAlloc.h"
+	"../../7zBuf.h"
+	"../../7zCrc.h"
+	"../../7zFile.h"
+	"../../7zVersion.h"
+	<direct.h>
+	<sys/stat.h>
+	<errno.h>
+
+1402894704 c:\lzma\c\util\7z\precomp.h
+	"../../Compiler.h"
+	"../../7zTypes.h"
+
+1447837464 c:\lzma\c\7z.h
+	"7zTypes.h"
+
+1427299678 c:\lzma\c\7zalloc.h
+	<stdlib.h>
+
+1358499600 c:\lzma\c\7zbuf.h
+	"7zTypes.h"
+
+1358499600 c:\lzma\c\7zcrc.h
+	"7zTypes.h"
+
+1358499600 c:\lzma\c\7zfile.h
+	<windows.h>
+	<stdio.h>
+	"7zTypes.h"
+
+1475579440 c:\lzma\c\7zversion.h
+
+1478958832 source:f:\personnel\c++\gestion des groupes\groupmanage.github.io\empreintesha256.cpp
+
+1480866740 source:f:\personnel\c++\gestion des groupes\groupmanage.github.io\httpsclient.cpp
+	"HTTPSclient.h"
+
+1480761544 f:\personnel\c++\gestion des groupes\groupmanage.github.io\httpsclient.h
+	<iostream>
+	<istream>
+	<ostream>
+	<string>
+	<vector>
+	<cstdlib>
+	<fstream>
+	<algorithm>
+	<boost/bind.hpp>
+	<boost/asio.hpp>
+	<boost/asio/ssl.hpp>
+	<windows.h>
+	<boost/filesystem.hpp>
+
+1478958832 source:i:\personnel\c++\gestion des groupes\groupmanage.github.io\empreintesha256.cpp
+
+1480866740 source:i:\personnel\c++\gestion des groupes\groupmanage.github.io\httpsclient.cpp
+	"HTTPSclient.h"
+
+1480761544 i:\personnel\c++\gestion des groupes\groupmanage.github.io\httpsclient.h
+	<iostream>
+	<istream>
+	<ostream>
+	<string>
+	<vector>
+	<cstdlib>
+	<fstream>
+	<algorithm>
+	<boost/bind.hpp>
+	<boost/asio.hpp>
+	<boost/asio/ssl.hpp>
+	<windows.h>
+	<boost/filesystem.hpp>
+
+1484677968 source:g:\personnel\c++\gestion des groupes\groupmanage.github.io\resource.rc
+	"windows.h"
+	"resource.h"
+
+1484677900 g:\personnel\c++\gestion des groupes\groupmanage.github.io\resource.h
+
+1481220804 source:i:\personnel\c++\gestion des groupes\groupmanage.github.io\resource.rc
+	"resource.h"
+
+1481218086 i:\personnel\c++\gestion des groupes\groupmanage.github.io\resource.h
+
+1481287860 source:i:\personnel\c++\gestion des groupes\groupmanage.github.io\update.cpp
+	<cstdlib>
+	<iostream>
+	<locale>
+	<string>
+	<tuple>
+	<boost/bind.hpp>
+	<boost/asio.hpp>
+	<boost/asio/ssl.hpp>
+	<boost/algorithm/string.hpp>
+	<windows.h>
+	<commctrl.h>
+	<Psapi.h>
+	<Shellapi.h>
+	"resource.h"
+	<boost/filesystem.hpp>
+	<C/Util/7z/7zlib/7zlib.h>
+	"HTTPSclient.h"
+	"EmpreinteSHA256.h"
+
+1480444496 i:\personnel\c++\gestion des groupes\groupmanage.github.io\empreintesha256.h
+	<iostream>
+	<sstream>
+	<string>
+	<iomanip>
+	<openssl/sha.h>
+
+1485196488 source:g:\personnel\c++\gestion des groupes\groupmanage.github.io\update_private.rc
+	<windows.h>
+	"resource.rc"
+
+1484677968 g:\personnel\c++\gestion des groupes\groupmanage.github.io\resource.rc
+	"windows.h"
+	"resource.h"
+

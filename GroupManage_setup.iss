@@ -2,21 +2,25 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "GroupManage"
+#define MyAppUpdateName "Update"
 #define MyAppVersion "3.4"
 #define MyAppPublisher "Simon Vareille"
 #define MyAppExeName "GroupManage.exe"
-;#define DEBUGING
+#define MyAppUpdateExeName "Update.exe"
 
+;#define DEBUGING
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{7756ECEB-2F76-4ED5-836C-37F53340C544}
+AppId={{B710547E-503E-47C9-BE64-67C495E9B59C}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+VersionInfoVersion=3.4.1.2
 ;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={pf}\GroupManage 3
+DefaultGroupName=GroupManage 3
 ;DisableProgramGroupPage=yes
 AllowNoIcons=yes
 OutputDir=.
@@ -31,58 +35,90 @@ LicenseFile="LICENCE.txt"
 InfoBeforeFile="resources\Files\IMPORTANT.rtf"
 ;InfoAfterFile=<chemin du fichier txt affiché après l'installation>
 
+ChangesAssociations = yes
+
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
+[Components]
+Name: "main"; Description: "{#MyAppName}"; Types: full compact;
+Name: "update"; Description: "Gestionnaire de mises à jour"; Types: full;
+
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; Components: main
+
+Name: "searchUpdate"; Description: "Rechercher les mises à jour :"; GroupDescription: "Gestionnaire de mise à jour :"; Components: update
+Name: "searchUpdate\updateAtBoot"; Description: "Au démarrage de l'ordinateur (ralenti le démarrage)."; GroupDescription: "Gestionnaire de mise à jour"; Flags: exclusive; Components: update
+Name: "searchUpdate\updateAtStart"; Description: "Au lancement de {#MyAppName}."; GroupDescription: "Gestionnaire de mise à jour"; Flags: exclusive; Components: update
+Name: "searchUpdate\installUpdate"; Description: "Installer la mise à jour automatiquement (ne pas m'avertir)."; GroupDescription: "Gestionnaire de mise à jour"; Flags: unchecked; Components: update
+
 ;Name: "commonprogramsicon"; Description: "Créer une icône dans le menu Demarrer"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "GroupManage.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Commune.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "IO.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Traitement.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Aide\*"; DestDir: "{app}\Aide"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "readme.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "LICENCE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "GroupManage.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "Update.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: update
+Source: "Commune.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "IO.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "Traitement.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "Aide\*"; DestDir: "{app}\Aide"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
+Source: "resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: main
+Source: "readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "LICENCE.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "version.vers"; DestDir: "{app}"; Flags: ignoreversion; Components: update
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Components: main
+Name: "{group}\{#MyAppUpdateName}"; Filename: "{app}\{#MyAppUpdateExeName}"; WorkingDir: "{app}"; Components: update
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"; Components: main
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main
 
 ;Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: commonprogramsicon;
 
 [Registry]
-Root: HKCR; Subkey: ".grma"; ValueType: string; ValueData: "GroupManage.grma";
-Root: HKCR; Subkey: "GroupManage.grma\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},1";
-Root: HKCR; Subkey: "GroupManage.grma\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1";
-Root: HKCR; Subkey: "GroupManage.grma\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1""";
+;Enregistrement du chemin de l'app
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"""; Components: main
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: "Path"; ValueData: """{app}"""; Components: main
 
-Root: HKCR; Subkey: ".grma2"; ValueType: string; ValueData: "GroupManage.grma2";
-Root: HKCR; Subkey: "GroupManage.grma2\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},1";
-Root: HKCR; Subkey: "GroupManage.grma2\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1";
-Root: HKCR; Subkey: "GroupManage.grma2\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1""";
+;Lancement de Update au lancement du programme principal
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: "LunchUpdate"; ValueData: "-update"; Tasks: searchUpdate\updateAtStart and searchUpdate\installUpdate;
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: "LunchUpdate"; ValueData: "-searchButNotDownload_Notify"; Tasks: searchUpdate\updateAtStart and not searchUpdate\installUpdate;
 
-Root: HKCR; Subkey: ".eac"; ValueType: string; ValueData: "GroupManage.eac";
-Root: HKCR; Subkey: "GroupManage.eac\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},2";
-Root: HKCR; Subkey: "GroupManage.eac\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1";
+;Lancement de Update au démarrage de l'ordinateur
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#MyAppName}{#MyAppUpdateName}"; ValueData: """{app}\{#MyAppUpdateExeName}"" -update"; Tasks: searchUpdate\updateAtBoot and searchUpdate\installUpdate;
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#MyAppName}{#MyAppUpdateName}"; ValueData: """{app}\{#MyAppUpdateExeName}"" -searchButNotDownload_Notify"; Tasks: searchUpdate\updateAtBoot and  not searchUpdate\installUpdate;                                                                                                                                                                                                                                               
 
+;Attribution des extensions
+Root: HKCR; Subkey: ".grma"; ValueType: string; ValueData: "GroupManage.grma"; Components: main
+Root: HKCR; Subkey: "GroupManage.grma\DefaultIcon"; ValueType: string; ValueData: """{app}\{#MyAppExeName},1"""; Components: main
+Root: HKCR; Subkey: "GroupManage.grma\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1"; Components: main
+Root: HKCR; Subkey: "GroupManage.grma\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Components: main
+
+Root: HKCR; Subkey: ".grma2"; ValueType: string; ValueData: "GroupManage.grma2"; Components: main
+Root: HKCR; Subkey: "GroupManage.grma2\DefaultIcon"; ValueType: string; ValueData: """{app}\{#MyAppExeName},1"""; Components: main
+Root: HKCR; Subkey: "GroupManage.grma2\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1"; Components: main
+Root: HKCR; Subkey: "GroupManage.grma2\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Components: main
+
+Root: HKCR; Subkey: ".eac"; ValueType: string; ValueData: "GroupManage.eac"; Components: main
+Root: HKCR; Subkey: "GroupManage.eac\DefaultIcon"; ValueType: string; ValueData: """{app}\{#MyAppExeName},2"""; Components: main
+Root: HKCR; Subkey: "GroupManage.eac\shell\edit\command"; ValueType: string; ValueData: "%SystemRoot%\system32\NOTEPAD.EXE %1"; Components: main
+
+;Suppression des clefs à la désinstallation
 #ifndef DEBUGING
 
-Root: HKCR; Subkey: ".grma"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GroupManage.grma"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; Flags: uninsdeletekey;
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueName: "{#MyAppName}{#MyAppUpdateName}"; Flags: uninsdeletevalue;
 
-Root: HKCR; Subkey: ".grma2"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GroupManage.grma2"; Flags: uninsdeletekey
+Root: HKCR; Subkey: ".grma"; Flags: uninsdeletekey; Components: main
+Root: HKCR; Subkey: "GroupManage.grma"; Flags: uninsdeletekey; Components: main
 
-Root: HKCR; Subkey: ".eac"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GroupManage.eac"; Flags: uninsdeletekey
+Root: HKCR; Subkey: ".grma2"; Flags: uninsdeletekey; Components: main
+Root: HKCR; Subkey: "GroupManage.grma2"; Flags: uninsdeletekey; Components: main
+
+Root: HKCR; Subkey: ".eac"; Flags: uninsdeletekey; Components: main
+Root: HKCR; Subkey: "GroupManage.eac"; Flags: uninsdeletekey; Components: main
 
 #endif
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent 
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent; Components: main

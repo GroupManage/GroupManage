@@ -1,7 +1,7 @@
 /*
 GroupManage was built in order to simplify the creation of groups. Please refer to the documentation for more details.
 
-Copyright (C) 2016  Simon Vareille
+Copyright (C) 2016-2017  Simon Vareille
 
 This file is part of GroupManage.
 
@@ -17,6 +17,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GroupManage. If not, see <http://www.gnu.org/licenses/>.
+
+In addition, as a special exception, the copyright holders give
+permission to link the code of portions of this program with the
+OpenSSL library. You must obey the GNU General Public License in
+all respects for all of the code used other than OpenSSL. If you
+modify file(s) with this exception, you may extend this exception
+to your version of the file(s), but you are not obligated to do so.
+If you do not wish to do so, delete this exception statement from
+your version. If you delete this exception statement from all source
+files in the program, then also delete it here.
 
 For any questions or suggestions, please contact me at <groupmanage.assistance@gmail.com>
 */
@@ -34,13 +44,13 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define ID_LISTBOXCLASSE      15
 #define ID_EDITLIST           16
 #define ID_BUTTONADD          17
-#define ID_BUTTONRECACTI      18
-#define ID_BUTTONNEWACTI      19
-#define ID_COMBOV1            20
-#define ID_COMBOV2            21
-#define ID_COMBOV3            22
-#define ID_STATUS             23
-#define ID_LISTVIEW           24
+#define ID_BUTTONNEWACTI      18
+#define ID_COMBOV1            19
+#define ID_COMBOV2            20
+#define ID_COMBOV3            21
+#define ID_STATUS             22
+#define ID_LISTVIEW           23
+#define ID_INSTALLUPDATE      24
 #define ID_BUTTONGOLINE       25
 #define ID_BUTTONFINDNAME     26
 #define ID_BUTTONFINDNEXT     27
@@ -52,13 +62,15 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define ID_CHANGEITEMTABMOINS 33
 #define ID_COMBOAPPCLASS      34
 #define ID_ETCHEDFRAME        35
+#define ID_SEARCHUPDATE       36
+
 
 
 #define IDM_ABSENT            100
 #define IDM_SUPPRSEM          101
 #define IDM_CHANGENAME        102
 #define PBM_SETMARQUEE (WM_USER+10)
-#define PBS_MARQUEE           0x08
+
 #define WM_CHANGECOLOR        WM_USER+1
 
 #define IDM_PRESENT           103
@@ -72,6 +84,8 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define IDM_PASTE             111
 #define IDM_VERIF_ACTI        112
 #define IDM_COUNT_APPLICATION 113
+#define IDM_SETTINGS_UPDATE   114
+#define IDM_SEARCHUPDATE      115
 
 
 #define IDM_OPEN              200
@@ -107,6 +121,7 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define IDT_FIABILITET        603
 #define IDT_FIABILITE         604
 #define IDT_MOYENNEVOEUX      605
+#define IDT_RESULTCHOICE      606
 
 
 #define MSG_SUBCLASSCONTROL   (WM_USER+20)
@@ -123,5 +138,16 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define IDI_ICON              1000
 #define IDI_ICONGRMA          1001
 #define IDI_ICONEAC           1002
+
+
+//décarations systèmes
+
+#ifndef PBS_MARQUEE
+#define PBS_MARQUEE           0x08
+#endif // PBS_MARQUEE
+
+#ifndef GWL_WNDPROC
+#define GWL_WNDPROC (-4)
+#endif // GWL_WNDPROC
 
 
