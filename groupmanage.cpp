@@ -6377,6 +6377,7 @@ BOOL APIENTRY DialogVerifRempliProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 	  				}
 	    		}
 	    		if(nbEnfantJour==0)continue;
+
  			    for(int i=0;i<enfants.size();i++)
  			    {
  			        erreurProbable=false;
@@ -6407,15 +6408,17 @@ BOOL APIENTRY DialogVerifRempliProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
                         strTemp.push_back('\0');
 						ListView_SetItemText(hListView,lvI.iItem,2, &strTemp[0]);
 
-                        strTemp=vector<char>(activite[enfants[i].voeux[jour].voeu1].nom.begin(), activite[enfants[i].voeux[jour].voeu1].nom.end());
+						vector<char> pasDeChoix {'P','a','s',' ','d','e',' ','c','h','o','i','x','\0'};
+
+                        strTemp=(enfants[i].voeux[jour].voeu1!=-1) ? vector<char>(activite[enfants[i].voeux[jour].voeu1].nom.begin(), activite[enfants[i].voeux[jour].voeu1].nom.end()) : pasDeChoix;
                         strTemp.push_back('\0');
-						ListView_SetItemText(hListView,lvI.iItem,3, (enfants[i].voeux[jour].voeu1!=-1) ? &strTemp[0] : (char*)"Pas de choix");
-						strTemp=vector<char>(activite[enfants[i].voeux[jour].voeu2].nom.begin(), activite[enfants[i].voeux[jour].voeu2].nom.end());
+						ListView_SetItemText(hListView,lvI.iItem,3, &strTemp[0]);
+						strTemp=(enfants[i].voeux[jour].voeu2!=-1) ? vector<char>(activite[enfants[i].voeux[jour].voeu2].nom.begin(), activite[enfants[i].voeux[jour].voeu2].nom.end()) : pasDeChoix;
                         strTemp.push_back('\0');
-						ListView_SetItemText(hListView,lvI.iItem,4, (enfants[i].voeux[jour].voeu2!=-1) ? &strTemp[0] : (char*)"Pas de choix");
-						strTemp=vector<char>(activite[enfants[i].voeux[jour].voeu3].nom.begin(), activite[enfants[i].voeux[jour].voeu3].nom.end());
+						ListView_SetItemText(hListView,lvI.iItem,4, &strTemp[0] );
+						strTemp=(enfants[i].voeux[jour].voeu3!=-1) ? vector<char>(activite[enfants[i].voeux[jour].voeu3].nom.begin(), activite[enfants[i].voeux[jour].voeu3].nom.end()) : pasDeChoix;
                         strTemp.push_back('\0');
-						ListView_SetItemText(hListView,lvI.iItem,5, (enfants[i].voeux[jour].voeu3!=-1) ? &strTemp[0] : (char*)"Pas de choix");
+						ListView_SetItemText(hListView,lvI.iItem,5, &strTemp[0] );
 
 						string ligne=to_string(i+1);
 						strTemp=vector<char>(ligne.begin(), ligne.end());
@@ -6425,6 +6428,7 @@ BOOL APIENTRY DialogVerifRempliProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 	  				    lvI.iItem++;
 		        		lvI.lParam++;
 		        		lvI.iSubItem=0;
+
 					}
 				}
 			}
