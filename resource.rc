@@ -355,7 +355,7 @@ BEGIN
     LTEXT "Choisissez les paramètres de mise à jour:", 0, 10, 10, 200, 12
 
     AUTOCHECKBOX "Rechercher les mises à jour :", ID_SEARCHUPDATE, 10, 20, 150, 12, BS_AUTOCHECKBOX
-    AUTORADIOBUTTON "Au démarrage de l'ordinateur (ralenti le démarrage).", IDC_RADIO1, 20, 30, 200, 12
+    AUTORADIOBUTTON "Au démarrage de l'ordinateur (ralentit le démarrage).", IDC_RADIO1, 20, 30, 200, 12
     AUTORADIOBUTTON "Au lancement de GroupManage.", IDC_RADIO2, 20, 40, 200, 12
     AUTOCHECKBOX "Installer la mise à jour automatiquement (ne pas m'avertir).", ID_INSTALLUPDATE, 20, 50, 200, 12, BS_AUTOCHECKBOX
 
