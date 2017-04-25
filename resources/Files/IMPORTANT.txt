@@ -1,11 +1,11 @@
-CES INFORMATIONS SONT TRES IMPORTANTES, VEUILLEZ LES LIRES LE PLUS ATTENTIVEMENT POSSIBLE (ce ne sera pas long, rassurez-vous)!
+CES INFORMATIONS SONT TRES IMPORTANTES, VEUILLEZ LES LIRE LE PLUS ATTENTIVEMENT POSSIBLE (ce ne sera pas long, rassurez-vous)!
 
 
 1.	Demandes
 
 	Ce logiciel étant libre (conformément à la licence GNU GPL), vous êtes en droit de le redistribuer à votre guise. Je vous demanderais alors de bien vouloir m'en informer à <groupmanage.assistance@gmail.com>, afin que je connaisse la popularité et le nombre de version de cette application. Merci de votre compréhension.
 
-	Ce logiciel étant open-source, le code est disponible sur github à l'adresse https://github.com/GroupManage/ ou en demandant à <groupmanage.assistance@gmail.com>.
+	Ce logiciel est open-source, le code est disponible sur github à l'adresse https://github.com/GroupManage/ ou en demandant à <groupmanage.assistance@gmail.com>.
 
 Fin de la partie courte. ^^
 
