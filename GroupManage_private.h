@@ -38,11 +38,11 @@ For any questions or suggestions, please contact me at <groupmanage.assistance@g
 #define GROUPMANAGE_PRIVATE_H
 
 /* VERSION DEFINITIONS */
-#define VER_STRING	"3.4.1.2"
+#define VER_STRING	"3.4.1.4"
 #define VER_MAJOR	3
 #define VER_MINOR	4
 #define VER_RELEASE	1
-#define VER_BUILD	2
+#define VER_BUILD	4
 #define COMPANY_NAME	"Simon Vareille"
 #define FILE_VERSION	"3.4"
 #define FILE_DESCRIPTION	"Classeur pour TAP"

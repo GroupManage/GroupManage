@@ -16,7 +16,7 @@
 AppId={{B710547E-503E-47C9-BE64-67C495E9B59C}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-VersionInfoVersion=3.4.1.2
+VersionInfoVersion=3.4.1.4
 ;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={pf}\GroupManage 3
@@ -24,7 +24,11 @@ DefaultGroupName=GroupManage 3
 ;DisableProgramGroupPage=yes
 AllowNoIcons=yes
 OutputDir=.
+#ifdef DEBUGING
+OutputBaseFilename=GroupManage_setup-3.4d
+#else
 OutputBaseFilename=GroupManage_setup-3.4
+#endif
 Compression=lzma
 SolidCompression=yes
 #ifdef DEBUGING
@@ -48,7 +52,7 @@ Name: "update"; Description: "Gestionnaire de mises à jour"; Types: full;
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; Components: main
 
 Name: "searchUpdate"; Description: "Rechercher les mises à jour :"; GroupDescription: "Gestionnaire de mise à jour :"; Components: update
-Name: "searchUpdate\updateAtBoot"; Description: "Au démarrage de l'ordinateur (ralenti le démarrage)."; GroupDescription: "Gestionnaire de mise à jour"; Flags: exclusive; Components: update
+Name: "searchUpdate\updateAtBoot"; Description: "Au démarrage de l'ordinateur (ralentit le démarrage)."; GroupDescription: "Gestionnaire de mise à jour"; Flags: exclusive; Components: update
 Name: "searchUpdate\updateAtStart"; Description: "Au lancement de {#MyAppName}."; GroupDescription: "Gestionnaire de mise à jour"; Flags: exclusive; Components: update
 Name: "searchUpdate\installUpdate"; Description: "Installer la mise à jour automatiquement (ne pas m'avertir)."; GroupDescription: "Gestionnaire de mise à jour"; Flags: unchecked; Components: update
 
